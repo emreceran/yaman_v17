@@ -1,0 +1,123 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record model="ir.ui.view" id="project_form_inherit_view">
+        <field name="name">project.form.form.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.edit_project"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header" position="inside">
+                <button  name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight"  data-hotkey="ö"/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button  name="catim_emri" string="Çatım Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button  name="cnc_emri" string="CNC Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+            </xpath>
+            <xpath expr="//header" position="inside">
+                <button  name="plastik_emri" string="Plastik Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+            </xpath>
+            <xpath expr="//field[@name='user_id']" position="replace">
+
+                <field name="toplam_kapi" />
+                <field name="kapali_toplam_kapi" />
+                <field name="scamli_toplam_kapi" />
+                <field name="citacamli_toplam_kapi" />
+                <field name="surgulu_kapali_toplam_kapi" />
+                <field name="surgulu_citacamli_toplam_kapi" />
+                <field name="surgulu_scamli_toplam_kapi" />
+                <field name="sadece_kapali_toplam_kapi" />
+                <field name="sadece_citacamli_toplam_kapi" />
+                <field name="sadece_scamli_toplam_kapi" />
+
+
+            </xpath>
+
+            <xpath expr="//field[@name='label_tasks']" position="before">
+
+                <!--                 <button  name="compute_toplam_kapi" string="toplam kapı hesapla Oluştur" type="object" />-->
+                <group>
+
+
+                    <field name="partner_id" />
+
+                    <field name="olcu_alan" />
+                    <field name="kaydi_giren" />
+                    <field name="kapi_model" />
+                    <field name="yuzey_tipi" />
+                    <field name="seren_tipi" />
+                    <field name="kasa_rengi" />
+                    <field name="yuzey_rengi" />
+                    <field name="pervaz_rengi" />
+                    <field name="cam_citasi" />
+                    <field name="klapa_citasi" />
+                    <field name="supurge_adet" />
+
+                </group>
+                <group>
+
+                    <field name="kasa_tipi" />
+                    <field name="yuzey_kalinlik" />
+                    <field name="pit_kalinlik" />
+                    <field name="pdt_kalinlik" />
+                    <field name="pb_kalinlik" />
+                    <field name="pi_genislik" />
+                    <field name="pd_genislik" />
+                    <field name="pb_genislik" />
+                    <field name="hirdavat" />
+                    <field name="image1" widget="image"/>
+                    <field name="image2" widget="image"/>
+
+                </group>
+
+
+            </xpath>
+
+        </field>
+    </record>
+
+
+    <record model="ir.ui.view" id="project_formsimplifeid_inherit_view">
+        <field name="name">project.form.simplifiedform.inherit</field>
+        <field name="model">project.project</field>
+        <field name="inherit_id" ref="project.project_project_view_form_simplified"/>
+        <field name="arch" type="xml">
+
+
+            <xpath expr="//div[hasclass('oe_title')]" position="after">
+                <group>
+
+                    <field name="olcu_alan"/>
+                    <field name="kaydi_giren" />
+                    <field name="kapi_model" />
+                    <field name="yuzey_tipi" />
+                    <field name="seren_tipi" />
+
+                    <field name="kasa_rengi" />
+                    <field name="yuzey_rengi" />
+                    <field name="pervaz_rengi" />
+
+                    <field name="kasa_tipi" />
+                    <field name="yuzey_kalinlik" />
+                    <field name="pit_kalinlik" />
+                    <field name="pdt_kalinlik" />
+                    <field name="pb_kalinlik" />
+                    <field name="pi_genislik" />
+                    <field name="pd_genislik" />
+                    <field name="pb_genislik" />
+                    <field name="hirdavat" />
+                    <field name="image1" widget="image"/>
+                    <field name="image2" widget="image"/>
+                </group>
+
+
+            </xpath>
+
+        </field>
+    </record>
+
+
+
+
+</odoo>
+
