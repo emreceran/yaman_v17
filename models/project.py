@@ -1322,19 +1322,19 @@ class ProjectTask(models.Model):
         ('blocked', 'Blocked')], string='Status',
         copy=False, default='normal', required=True, readonly=False, store=True)
 
-    kanban_state_label = fields.Char(compute='_compute_kanban_state_label', string='Kanban State Label', tracking=True,
-                                     task_dependency_tracking=True)
-
-    @api.depends('stage_id', 'kanban_state')
-    def _compute_kanban_state_label(self):
-        for task in self:
-            if task.kanban_state == 'normal':
-                task.kanban_state_label = task.legend_normal
-            elif task.kanban_state == 'blocked':
-                task.kanban_state_label = task.legend_blocked
-            else:
-                task.kanban_state_label = task.legend_done
-
+    # kanban_state_label = fields.Char(compute='_compute_kanban_state_label', string='Kanban State Label', tracking=True,
+    #                                  task_dependency_tracking=True)
+    #
+    # @api.depends('stage_id', 'kanban_state')
+    # def _compute_kanban_state_label(self):
+    #     for task in self:
+    #         if task.kanban_state == 'normal':
+    #             task.kanban_state_label = task.legend_normal
+    #         elif task.kanban_state == 'blocked':
+    #             task.kanban_state_label = task.legend_blocked
+    #         else:
+    #             task.kanban_state_label = task.legend_done
+    #
 
 
 
