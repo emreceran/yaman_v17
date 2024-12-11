@@ -39,10 +39,12 @@ class Project(models.Model):
     pd_genislik = fields.Integer(string="Pervaz Dış Genişlik")
     pb_genislik = fields.Integer(string="Pervaz Başlık Genişlik")
     hirdavat = fields.Char(string="Hırdavat")
+    cnc_description = fields.Text(string="CNC Emri Açıklaması")
     image1 = fields.Image("Resim")
     image2 = fields.Image("Resim")
 
     toplam_kapi = fields.Char(string="Toplam Kapı Sayısı", compute="_compute_toplam_kapi")
+    plastik_kapi = fields.Char(string="Plastik Kapı Sayısı", compute="_compute_toplam_plastik_kapi")
     kapali_toplam_kapi = fields.Char(string="Kapalı Kapı Sayısı", compute="_compute_kapali_toplam_kapi")
     citacamli_toplam_kapi = fields.Char(string="Ç. Camlı Kapı Sayısı", compute="_compute_citacamli_toplam_kapi")
     scamli_toplam_kapi = fields.Char(string="S. Camlı Kapı Sayısı", compute="_compute_scamli_toplam_kapi")
@@ -73,6 +75,17 @@ class Project(models.Model):
 
         for record in self:
             record.toplam_kapi = str(toplam_adet)
+
+    @api.depends("task_ids")
+    def _compute_toplam_plastik_kapi(self):
+        tasks = self.task_ids
+        gorevler = [gorev for gorev in tasks if gorev.stage_id.name == "satırlar" and gorev.plastik == '1']
+        toplam_adet = 0
+        for i in gorevler:
+            toplam_adet += i.adet
+
+        for record in self:
+            record.plastik_kapi = str(toplam_adet)
 
     @api.depends("task_ids")
     def _compute_kapali_toplam_kapi(self):
@@ -313,6 +326,19 @@ class Project(models.Model):
                 gorevler.append(gorev)
 
         return gorevler
+    
+    def _siparis_emirleri_getir(self):
+        tasks = self.task_ids
+        plastik_emri_stage_id = self.env['project.task.type'].search(
+            [('project_ids', 'in', self.id), ('name', 'like', "SATIN ALMA EMRİ")], limit=1).id
+
+        gorevler = []
+        for gorev in tasks:
+
+            if gorev.stage_id.id == plastik_emri_stage_id:
+                gorevler.append(gorev)
+
+        return gorevler
 
     def _kas_emirleri_getir(self):
 
@@ -428,7 +454,7 @@ class Project(models.Model):
         görevn eni 100cmden büyükse büyükenli denir"""
 
         for gorev in gorevler:
-            if gorev.tip in ['1', '2', '3']:  # normal tip
+            if gorev.tip in ['1', '2', '3','4']:  # normal tip
                 if gorev.en > 100:
                     buyukenli_gorevler.append(gorev)
                 else:
@@ -620,27 +646,37 @@ class Project(models.Model):
 
     def yuzey_emirleri(self, gorevler, sarma_emri_stage_id, plastik):
 
-        """önce görevler salma camlı ve kapalı olaak ikkiye ayrıllır"""
         kapali_gorevler = []
+        citali_gorevler = []
         scamli_gorevler = []
         surgulu_kapali_gorevler = []
+        surgulu_citali_gorevler = []
         surgulu_scamli_gorevler = []
         sadece_kapali_gorevler = []
+        sadece_citali_gorevler = []
         sadece_scamli_gorevler = []
 
         for gorev in gorevler:
-            if gorev.tip == "2" or gorev.tip == "1":  # ('1', 'Kapalı'), ('2', 'Çıtalı Camlı'),
+            if gorev.tip == "1":  # ('1', 'Kapalı')
                 kapali_gorevler.append(gorev)
+            elif gorev.tip == "2":  # ('2', 'Çıtalı Camlı')
+                citali_gorevler.append(gorev)
             elif gorev.tip == "3":  # ('3', 'Salma Camlı')
                 scamli_gorevler.append(gorev)
-            elif gorev.tip == "6" or gorev.tip == "5":  # ('5', 'Sürgülü Kapalı'), ('6', 'Sürgülü Çıtalı Camlı'),
+            elif gorev.tip == "5":  # ('5', 'Sürgülü Kapalı')
                 surgulu_kapali_gorevler.append(gorev)
+            elif gorev.tip == "6":  # ('6', 'Sürgülü Çıtalı Camlı')
+                surgulu_citali_gorevler.append(gorev)
             elif gorev.tip == "7":  # ('7', 'Sürgülü Salma Camlı')
                 surgulu_scamli_gorevler.append(gorev)
-            elif gorev.tip == "9" or gorev.tip == "8":  # ('8', 'Sadece Kapalı'), ('9', 'Sadece Çıtalı Camlı')
+            elif gorev.tip == "8":  # ('8', 'Sadece Kapalı')
                 sadece_kapali_gorevler.append(gorev)
+            elif gorev.tip == "9":  # ('9', 'Sadece Çıtalı Camlı')
+               sadece_citali_gorevler.append(gorev)
             elif gorev.tip == "10":  # ('10', 'Sadece Salma Camlı')
                 sadece_scamli_gorevler.append(gorev)
+
+# *******************************************************************************************************************************************
 
         """salma camlı enler belirlenir tekrarlayanlar iptal edenler"""
         scamli_enler = set([a.en for a in scamli_gorevler])
@@ -662,9 +698,36 @@ class Project(models.Model):
         for i in scamlienadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
-                                             'name': "YÜZEY 18mm " + str(210) + " cm " + str(
+                                             'name':"SALMA CAMLI" + " YÜZEY 18mm " + str(210) + " cm " + str(
                                                  i[0] - 5) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+
+# *******************************************************************************************************************************************
+
+        """ÇITALI görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
+        citali_enler = set([a.en for a in citali_gorevler])
+
+        """ aynı enli görrelerin toplaam adetleri belirlenir"""
+        citaliadetler = []
+
+        for boy in citali_enler:
+            adet = 0
+            for gorev in citali_gorevler:
+
+                if gorev.en == boy:
+                    adet += gorev.adet
+            citaliadetler.append([boy, adet])
+
+        """kapalı görevler YÜZEY yuzey_kalinlik mm 210 cm boy -4 cm """
+        for i in citaliadetler:
+                self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
+                                             'stage_id': sarma_emri_stage_id, 'plastik': plastik,
+                                             'name':"ÇITALI" + " YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
+                                                 210) + " cm " + str(
+                                                 i[0] - 4) + " cm  " + str(
+                                                 i[1] * 2) + " Adet"})
+           
+# *******************************************************************************************************************************************
 
         """kapalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
         kapali_enler = set([a.en for a in kapali_gorevler])
@@ -684,10 +747,12 @@ class Project(models.Model):
         for i in kapaliadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
-                                             'name': "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
+                                             'name':"KAPALI " + "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
                                                  210) + " cm " + str(
                                                  i[0] - 4) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+
+# *******************************************************************************************************************************************
 
         """surgulu_salma camlı enler belirlenir tekrarlayanlar iptal edenler"""
         surgulu_scamli_enler = set([a.en for a in surgulu_scamli_gorevler])
@@ -709,9 +774,36 @@ class Project(models.Model):
         for i in surgulu_scamlienadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
-                                             'name': "YÜZEY 18mm " + str(210) + " cm " + str(
+                                             'name':"sÜRGÜLÜ SALMA CAMLI " +  "YÜZEY 18mm " + str(210) + " cm " + str(
                                                  i[0]) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+
+# *******************************************************************************************************************************************
+
+        """surgulu_citali görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
+        surgulu_citali_enler = set([a.en for a in surgulu_citali_gorevler])
+
+        """ aynı enli görrelerin toplaam adetleri belirlenir"""
+        surgulu_citaliadetler = []
+
+        for boy in surgulu_citali_enler:
+            adet = 0
+            for gorev in surgulu_citaliadetler:
+
+                if gorev.en == boy:
+                    adet += gorev.adet
+            surgulu_citaliadetler.append([boy, adet])
+
+        """surgulu_kapalı görevler YÜZEY yuzey_kalinlik mm 210 cm boy +1 cm """
+        for i in surgulu_citaliadetler:
+            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
+                                             'stage_id': sarma_emri_stage_id, 'plastik': plastik,
+                                             'name':"SÜRGÜLÜ ÇITALI " +  "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
+                                                 210) + " cm " + str(
+                                                 i[0] + 1) + " cm  " + str(
+                                                 i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
 
         """surgulu_kapalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
         surgulu_kapali_enler = set([a.en for a in surgulu_kapali_gorevler])
@@ -731,10 +823,12 @@ class Project(models.Model):
         for i in surgulu_kapaliadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
-                                             'name': "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
+                                             'name':"SÜRGÜLÜ KAPALI " +  "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
                                                  210) + " cm " + str(
                                                  i[0] + 1) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
 
         """sadece_salma camlı enler belirlenir tekrarlayanlar iptal edenler"""
         sadece_scamli_enler = set([a.en for a in sadece_scamli_gorevler])
@@ -757,9 +851,36 @@ class Project(models.Model):
         for i in sadece_scamlienadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
-                                             'name': "YÜZEY 18mm " + str(i[2]) + " cm " + str(
+                                             'name':"SADECE SALMA CAMLI " +  "YÜZEY 18mm " + str(i[2]) + " cm " + str(
                                                  i[0]) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
+
+        """sadece_çitalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
+        sadece_citali_enler = set([a.en for a in sadece_citali_gorevler])
+
+        """ aynı enli görrelerin toplaam adetleri belirlenir"""
+        sadece_citaliadetler = []
+
+        for boy in sadece_citali_enler:
+            adet = 0
+            for gorev in sadece_citali_gorevler:
+
+                if gorev.en == boy:
+                    adet += gorev.adet
+            sadece_citaliadetler.append([boy, adet])
+
+        """sadece_kapalı görevler YÜZEY yuzey_kalinlik mm 210 cm boy +1 cm """
+        for i in sadece_citaliadetler:
+            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
+                                             'stage_id': sarma_emri_stage_id, 'plastik': plastik,
+                                             'name':"SADECE ÇITALI " + "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
+                                                 210) + " cm " + str(
+                                                 i[0] + 1) + " cm  " + str(
+                                                 i[1] * 2) + " Adet"})
+
+# *******************************************************************************************************************************************
 
         """sadece_kapalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
         sadece_kapali_enler = set([a.en for a in sadece_kapali_gorevler])
@@ -779,7 +900,7 @@ class Project(models.Model):
         for i in sadece_kapaliadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
-                                             'name': "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
+                                             'name':"SADECE KAPALI " + "YÜZEY  " + str(self.yuzey_kalinlik) + " mm " + str(
                                                  210) + " cm " + str(
                                                  i[0] + 1) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
@@ -811,27 +932,37 @@ class Project(models.Model):
         cnc_emri_stage_id = self.env['project.task.type'].search(
             [('project_ids', 'in', self.id), ('name', 'like', "CNC EMRİ")], limit=1).id
 
-        """önce görevler salma camlı ve kapalı olaak ikkiye ayrıllır"""
         kapali_gorevler = []
+        citali_gorevler = []
         scamli_gorevler = []
         surgulu_kapali_gorevler = []
+        surgulu_citali_gorevler = []
         surgulu_scamli_gorevler = []
         sadece_kapali_gorevler = []
+        sadece_citali_gorevler = []
         sadece_scamli_gorevler = []
 
         for gorev in gorevler:
-            if gorev.tip == "2" or gorev.tip == "1":  # ('1', 'Kapalı'), ('2', 'Çıtalı Camlı'),
+            if gorev.tip == "1":  # ('1', 'Kapalı')
                 kapali_gorevler.append(gorev)
+            elif gorev.tip == "2":  # ('2', 'Çıtalı Camlı')
+                citali_gorevler.append(gorev)
             elif gorev.tip == "3":  # ('3', 'Salma Camlı')
                 scamli_gorevler.append(gorev)
-            elif gorev.tip == "6" or gorev.tip == "5":  # ('5', 'Sürgülü Kapalı'), ('6', 'Sürgülü Çıtalı Camlı'),
+            elif gorev.tip == "5":  # ('5', 'Sürgülü Kapalı')
                 surgulu_kapali_gorevler.append(gorev)
+            elif gorev.tip == "6":  # ('6', 'Sürgülü Çıtalı Camlı')
+                surgulu_citali_gorevler.append(gorev)
             elif gorev.tip == "7":  # ('7', 'Sürgülü Salma Camlı')
                 surgulu_scamli_gorevler.append(gorev)
-            elif gorev.tip == "9" or gorev.tip == "8":  # ('8', 'Sadece Kapalı'), ('9', 'Sadece Çıtalı Camlı')
+            elif gorev.tip == "8":  # ('8', 'Sadece Kapalı')
                 sadece_kapali_gorevler.append(gorev)
+            elif gorev.tip == "9":  # ('9', 'Sadece Çıtalı Camlı')
+               sadece_citali_gorevler.append(gorev)
             elif gorev.tip == "10":  # ('10', 'Sadece Salma Camlı')
                 sadece_scamli_gorevler.append(gorev)
+
+# *******************************************************************************************************************************************
 
         """salma camlı enler belirlenir tekrarlayanlar iptal edenler"""
         scamli_enler = set([a.en for a in scamli_gorevler])
@@ -853,10 +984,35 @@ class Project(models.Model):
         for i in scamlienadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': cnc_emri_stage_id,
-                                             'name': str(self.tip_degeri_bul(gorev.tip)) + " YÜZEY 18mm " + str(
+                                             'name':"SALMA CAMLI" + " YÜZEY 18mm " + str(
                                                  210) + " cm " + str(
                                                  i[0] - 5) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
+
+        citali_enler = set([a.en for a in kapali_gorevler])
+
+        citaliadetler = []
+
+        for boy in citali_enler:
+            adet = 0
+            for gorev in citali_gorevler:
+
+                if gorev.en == boy:
+                    adet += gorev.adet
+            citaliadetler.append([boy, adet])
+
+        """kapalı görevler YÜZEY yuzey_kalinlik mm 210 cm boy -4 cm """
+        for i in citaliadetler:
+            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
+                                             'stage_id': cnc_emri_stage_id,
+                                             'name':"ÇITALI" + " YÜZEY  " + str(
+                                                 self.yuzey_kalinlik) + " mm " + str(210) + " cm " + str(
+                                                 i[0] - 4) + " cm  " + str(
+                                                 i[1] * 2) + " Adet"})
+
+# *******************************************************************************************************************************************
 
         """kapalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
         kapali_enler = set([a.en for a in kapali_gorevler])
@@ -876,10 +1032,13 @@ class Project(models.Model):
         for i in kapaliadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': cnc_emri_stage_id,
-                                             'name': str(self.tip_degeri_bul(gorev.tip)) + " YÜZEY  " + str(
+                                             'name':"KAPALI" + " YÜZEY  " + str(
                                                  self.yuzey_kalinlik) + " mm " + str(210) + " cm " + str(
                                                  i[0] - 4) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
+
 
         """surgulu_salma camlı enler belirlenir tekrarlayanlar iptal edenler"""
         surgulu_scamli_enler = set([a.en for a in surgulu_scamli_gorevler])
@@ -901,10 +1060,37 @@ class Project(models.Model):
         for i in surgulu_scamlienadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': cnc_emri_stage_id,
-                                             'name': str(self.tip_degeri_bul(gorev.tip)) + " YÜZEY 18mm " + str(
+                                             'name':"SÜRGÜLÜ SALMA CAMLI" + " YÜZEY 18mm " + str(
                                                  210) + " cm " + str(
                                                  i[0]) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
+
+        """surgulu_citali görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
+        surgulu_citali_enler = set([a.en for a in surgulu_citali_gorevler])
+
+        """ aynı enli görrelerin toplaam adetleri belirlenir"""
+        surgulu_citaliadetler = []
+
+        for boy in surgulu_citali_enler:
+            adet = 0
+            for gorev in surgulu_citaliadetler:
+
+                if gorev.en == boy:
+                    adet += gorev.adet
+            surgulu_citaliadetler.append([boy, adet])
+
+        """surgulu_kapalı görevler YÜZEY yuzey_kalinlik mm 210 cm boy +1 cm """
+        for i in surgulu_citaliadetler:
+            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
+                                             'stage_id': cnc_emri_stage_id,
+                                             'name':"SÜRGÜLÜ ÇITALI" + " YÜZEY  " + str(
+                                                 self.yuzey_kalinlik) + " mm " + str(210) + " cm " + str(
+                                                 i[0] + 1) + " cm  " + str(
+                                                 i[1] * 2) + " Adet"})
+ 
+# *******************************************************************************************************************************************
 
         """surgulu_kapalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
         surgulu_kapali_enler = set([a.en for a in surgulu_kapali_gorevler])
@@ -924,10 +1110,12 @@ class Project(models.Model):
         for i in surgulu_kapaliadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': cnc_emri_stage_id,
-                                             'name': str(self.tip_degeri_bul(gorev.tip)) + " YÜZEY  " + str(
+                                             'name':"SÜRGÜLÜ KAPALI" + " YÜZEY  " + str(
                                                  self.yuzey_kalinlik) + " mm " + str(210) + " cm " + str(
                                                  i[0] + 1) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
 
         """sadece_salma camlı enler belirlenir tekrarlayanlar iptal edenler"""
         sadece_scamli_enler = set([a.en for a in sadece_scamli_gorevler])
@@ -950,10 +1138,37 @@ class Project(models.Model):
         for i in sadece_scamlienadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': cnc_emri_stage_id,
-                                             'name': str(self.tip_degeri_bul(gorev.tip)) + " YÜZEY 18mm " + str(
+                                             'name': "SADECE SALMA CAMLI" + " YÜZEY 18mm " + str(
                                                  i[2]) + " cm " + str(
                                                  i[0]) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
+
+        """sadece_çitalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
+        sadece_citali_enler = set([a.en for a in sadece_citali_gorevler])
+
+        """ aynı enli görrelerin toplaam adetleri belirlenir"""
+        sadece_citaliadetler = []
+
+        for boy in sadece_citali_enler:
+            adet = 0
+            for gorev in sadece_citali_gorevler:
+
+                if gorev.en == boy:
+                    adet += gorev.adet
+            sadece_citaliadetler.append([boy, adet])
+
+        """sadece_kapalı görevler YÜZEY yuzey_kalinlik mm 210 cm boy +1 cm """
+        for i in sadece_citaliadetler:
+            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
+                                             'stage_id': cnc_emri_stage_id,
+                                             'name':"SADECE ÇITALI" + " YÜZEY  " + str(
+                                                 self.yuzey_kalinlik) + " mm " + str(210) + " cm " + str(
+                                                 i[0] + 1) + " cm  " + str(
+                                                 i[1] * 2) + " Adet"})
+            
+# *******************************************************************************************************************************************
 
         """sadece_kapalı görevlerin ennleri tekrar etmeyecek şiekilde listelebeir aynı enlileri birlemek için"""
         sadece_kapali_enler = set([a.en for a in sadece_kapali_gorevler])
@@ -973,7 +1188,7 @@ class Project(models.Model):
         for i in sadece_kapaliadetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': i[1] * 2,
                                              'stage_id': cnc_emri_stage_id,
-                                             'name': str(self.tip_degeri_bul(gorev.tip)) + " YÜZEY  " + str(
+                                             'name':"SADECE KAPALI" + " YÜZEY  " + str(
                                                  self.yuzey_kalinlik) + " mm " + str(210) + " cm " + str(
                                                  i[0] + 1) + " cm  " + str(
                                                  i[1] * 2) + " Adet"})
@@ -1067,6 +1282,57 @@ class Project(models.Model):
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
                                              'stage_id': catim_emri_stage_id, 'plastik': '2',
                                              'gorev_turu': '1', 'name': gorev_adi})
+            
+        #********************************************************************************************************
+
+        # gorevler = self.uretim_emirleri()
+        # kapali_gorevler = [gorev for gorev in gorevler if
+        #                    gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '2' and gorev.en > 100]
+
+        # kapali_gorevler_adetli = []
+
+        # for gorev in kapali_gorevler:
+        #     if gorev.tip in ['5', '6']:
+        #         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy) + " cm " + \
+        #                     str(gorev.en) + " cm : "
+        #     elif gorev.tip in ['8', '9']:
+        #         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en2) + " cm : "
+        #         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en - gorev.en2 - 5) + " cm : "
+        #     else:
+        #         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en2) + " cm : "
+        #         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en - gorev.en2 - 5) + " cm : "
+        #     adet = gorev.adet
+        #     kapali_gorevler_adetli.append([gorev_adi, [adet]])
+        #     kapali_gorevler_adetli.append([gorev_adi2, [adet]])
+
+        # kapali_gorevler_dict = {}
+
+        # for item in kapali_gorevler_adetli:
+
+        #     if item[0] in kapali_gorevler_dict:
+        #         kapali_gorevler_dict[item[0]].append(item[1][0])
+        #     else:
+        #         kapali_gorevler_dict[item[0]] = item[1]
+
+        # for item in kapali_gorevler_dict:
+        #     kapali_gorevler_dict[item] = sum(kapali_gorevler_dict[item])
+
+        # for key in kapali_gorevler_dict:
+        #     gorev_adi = key + str(kapali_gorevler_dict[key]) + " Adet"
+        #     gorev_Adet = kapali_gorevler_dict[key]
+        #     self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
+        #                                      'stage_id': catim_emri_stage_id, 'plastik': '2',
+        #                                      'gorev_turu': '1', 'name': gorev_adi})
+    #********************************************************************************************************
 
         gorevler = self.uretim_emirleri()
         kapali_gorevler = [gorev for gorev in gorevler if
@@ -1108,6 +1374,57 @@ class Project(models.Model):
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
                                              'stage_id': catim_emri_stage_id, 'plastik': '1',
                                              'gorev_turu': '1', 'name': gorev_adi})
+        #********************************************************************************************************
+
+        # gorevler = self.uretim_emirleri()
+        # kapali_gorevler = [gorev for gorev in gorevler if
+        #                    gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '1' and gorev.en > 100]
+
+        # kapali_gorevler_adetli = []
+
+        # for gorev in kapali_gorevler:
+        #     if gorev.tip in ['5', '6']:
+        #         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy) + " cm " + \
+        #                     str(gorev.en) + " cm : "
+        #     elif gorev.tip in ['8', '9']:
+        #         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en2) + " cm : "
+        #         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en - gorev.en2 - 5) + " cm : "
+        #     else:
+        #         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en2) + " cm : "
+        #         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+        #             gorev.boy - 3) + " cm " + \
+        #                     str(gorev.en - gorev.en2 - 5) + " cm : "
+        #     adet = gorev.adet
+        #     kapali_gorevler_adetli.append([gorev_adi, [adet]])
+        #     kapali_gorevler_adetli.append([gorev_adi2, [adet]])
+
+        # kapali_gorevler_dict = {}
+
+        # for item in kapali_gorevler_adetli:
+
+        #     if item[0] in kapali_gorevler_dict:
+        #         kapali_gorevler_dict[item[0]].append(item[1][0])
+        #     else:
+        #         kapali_gorevler_dict[item[0]] = item[1]
+
+        # for item in kapali_gorevler_dict:
+        #     kapali_gorevler_dict[item] = sum(kapali_gorevler_dict[item])
+
+        # for key in kapali_gorevler_dict:
+        #     gorev_adi = key + str(kapali_gorevler_dict[key]) + " Adet"
+        #     gorev_Adet = kapali_gorevler_dict[key]
+        #     self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
+        #                                      'stage_id': catim_emri_stage_id, 'plastik': '2',
+        #                                      'gorev_turu': '1', 'name': gorev_adi})
+            
+    #********************************************************************************************************
 
         self.kesim_emri()
 
@@ -1118,12 +1435,12 @@ class Project(models.Model):
 
         gorevler = self.uretim_emirleri()
         kapali_gorevler = [gorev for gorev in gorevler if
-                           gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '2']
+            gorev.tip in ['1', '2', '3', '4', '5', '6', '7'] and gorev.plastik == '2']
 
         kapali_gorevler_adetli = []
 
         for gorev in kapali_gorevler:
-            if gorev.tip in ['5', '6']:
+            if gorev.tip in ['5', '6', '7']:
                 gorev_adi = "lambasız " + str(gorev.kasa_eni) + " x " + str(gorev.boy) + " x " + str(gorev.en)
             else:
                 gorev_adi = str(gorev.kasa_eni) + " x " + str(gorev.boy) + " x " + str(gorev.en)
@@ -1152,12 +1469,15 @@ class Project(models.Model):
 
         gorevler = self.uretim_emirleri()
         kapali_gorevler = [gorev for gorev in gorevler if
-                           gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '1']
+                           gorev.tip in ['1', '2', '3', '4', '5', '6', '7'] and gorev.plastik == '1']
 
         kapali_gorevler_adetli = []
 
         for gorev in kapali_gorevler:
-            gorev_adi = str(gorev.kasa_eni) + " x " + str(gorev.boy) + " x " + str(gorev.en)
+            if gorev.tip in ['5', '6', '7']:
+                gorev_adi = "lambasız " + str(gorev.pk.value) + " x " + str(gorev.boy) + " x " + str(gorev.en)
+            else:
+                gorev_adi = str(gorev.pk) + " x " + str(gorev.boy) + " x " + str(gorev.en)
             adet = gorev.adet
             kapali_gorevler_adetli.append([gorev_adi, [adet]])
 
@@ -1180,99 +1500,48 @@ class Project(models.Model):
                                              'stage_id': catim_emri_stage_id, 'plastik': '1',
                                              'gorev_turu': '2', 'name': gorev_adi})
 
-    def plastik_emri(self):
+    def plastik_siparis_emri(self):
 
         gorevler = self.uretim_emirleri()
 
         plastik_emri_stage_id = self.env['project.task.type'].search(
-            [('project_ids', 'in', self.id), ('name', 'like', "PLASTİK EMRİ")], limit=1).id
+            [('project_ids', 'in', self.id), ('name', 'like', "SATIN ALMA EMRİ")], limit=1).id
 
         plastik_gorevler = [gorev for gorev in gorevler if gorev.plastik == "1"]
 
-        pop_gorevler = []
-        pap_gorevler = []
-        pbpo_gorevler = []
-        pbpa_gorevler = []
-
+        tasks = []
         for gorev in plastik_gorevler:
-            gorev_pop = str(gorev.pop.name)
-            gorev_pap = str(gorev.pap.name)
-            gorev_pbpo = str(gorev.pbpo.name)
-            gorev_pbpa = str(gorev.pbpa.name)
+            tasks.append([(gorev.pop.name, gorev.pop.description), gorev.adet*2])
+            tasks.append([(gorev.pap.name, gorev.pap.description), gorev.adet*2])
+            tasks.append([(gorev.pbpo.name, gorev.pbpo.description), gorev.adet*0.5])
+            tasks.append([(gorev.pbpa.name, gorev.pbpa.description), gorev.adet*0.5])
+            tasks.append([(gorev.pk.name, gorev.pk.description), gorev.adet*2.5])
 
-            adet = gorev.adet
-            pop_gorevler.append([gorev_pop, [adet]])
-            pap_gorevler.append([gorev_pap, [adet]])
-            pbpo_gorevler.append([gorev_pbpo, [adet]])
-            pbpa_gorevler.append([gorev_pbpa, [adet]])
+        result = {}
+        for item in tasks:
+            key = item[0]  # kodu kontrol etmek için
+            adet = item[1]  # adetleri toplamak için
 
-        pop_gorevler_dict = {}
-        for item in pop_gorevler:
-            if item[0] in pop_gorevler_dict:
-                pop_gorevler_dict[item[0]].append(item[1][0])
+            if key in result:
+                result[key] += adet  # Aynı anahtar varsa adetleri topla
             else:
-                pop_gorevler_dict[item[0]] = item[1]
+                result[key] = adet  # Yeni anahtar oluştur
 
-        for item in pop_gorevler_dict:
-            pop_gorevler_dict[item] = sum(pop_gorevler_dict[item])
+            
+        for key in result:
+            adet = result[key]
+            gorev_adi = key[0] + ":" + key[1] + ":" + str(adet)
+            self.env['project.task'].create({
+                'project_id': self.id,
+                'allocated_hours': adet,
+                'stage_id': plastik_emri_stage_id,
+                'name': gorev_adi,
+            })
 
-        for key in pop_gorevler_dict:
-            gorev_adi = key + " x  " + str(pop_gorevler_dict[key] * 2) + " Adet"
-            gorev_Adet = pop_gorevler_dict[key]
-            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
-                                             'stage_id': plastik_emri_stage_id,
-                                             'name': gorev_adi})
+ 
 
-        pap_gorevler_dict = {}
-        for item in pap_gorevler:
-            if item[0] in pap_gorevler_dict:
-                pap_gorevler_dict[item[0]].append(item[1][0])
-            else:
-                pap_gorevler_dict[item[0]] = item[1]
 
-        for item in pap_gorevler_dict:
-            pap_gorevler_dict[item] = sum(pap_gorevler_dict[item])
-
-        for key in pap_gorevler_dict:
-            gorev_adi = key + " x  " + str(pap_gorevler_dict[key] * 2) + " Adet"
-            gorev_Adet = pap_gorevler_dict[key]
-            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
-                                             'stage_id': plastik_emri_stage_id,
-                                             'name': gorev_adi})
-
-        pbpo_gorevler_dict = {}
-        for item in pbpo_gorevler:
-            if item[0] in pbpo_gorevler_dict:
-                pbpo_gorevler_dict[item[0]].append(item[1][0])
-            else:
-                pbpo_gorevler_dict[item[0]] = item[1]
-
-        for item in pbpo_gorevler_dict:
-            pbpo_gorevler_dict[item] = sum(pbpo_gorevler_dict[item])
-
-        for key in pbpo_gorevler_dict:
-            gorev_adi = key + " x  " + str(math.ceil(pbpo_gorevler_dict[key] * 0.5)) + " Adet"
-            gorev_Adet = pbpo_gorevler_dict[key]
-            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
-                                             'stage_id': plastik_emri_stage_id,
-                                             'name': gorev_adi})
-
-        pbpa_gorevler_dict = {}
-        for item in pbpa_gorevler:
-            if item[0] in pbpa_gorevler_dict:
-                pbpa_gorevler_dict[item[0]].append(item[1][0])
-            else:
-                pbpa_gorevler_dict[item[0]] = item[1]
-
-        for item in pbpa_gorevler_dict:
-            pbpa_gorevler_dict[item] = sum(pbpa_gorevler_dict[item])
-
-        for key in pbpa_gorevler_dict:
-            gorev_adi = key + " x  " + str(math.ceil(pbpa_gorevler_dict[key] * 0.5)) + " Adet"
-            gorev_Adet = pbpa_gorevler_dict[key]
-            self.env['project.task'].create({'project_id': self.id, 'allocated_hours': gorev_Adet,
-                                             'stage_id': plastik_emri_stage_id,
-                                             'name': gorev_adi})
+        
 
 
 class ProjectTask(models.Model):
@@ -1311,10 +1580,12 @@ class ProjectTask(models.Model):
     ], default='1', string="gorev turu?")
 
     oda = fields.Many2one('yaman.oda', string="Oda")
-    pop = fields.Many2one('yaman.plastik', string="Plastik Ön Peraz")
-    pap = fields.Many2one('yaman.plastik', string="Plastik Arka Peraz")
-    pbpo = fields.Many2one('yaman.plastik', string="Plastik Başlık Peraz Ön")
-    pbpa = fields.Many2one('yaman.plastik', string="Plastik Başlık Peraz Arka")
+    pop = fields.Many2one('yaman.plastik', string="Pervaz Ön Plastik")
+    pap = fields.Many2one('yaman.plastik', string="Pervaz Arka Plastik")
+    pbpo = fields.Many2one('yaman.plastik', string="Pervaz Başlık Ön Plastik")
+    pbpa = fields.Many2one('yaman.plastik', string="Pervaz Başlık Arka Plastik")
+    pk = fields.Many2one('yaman.plastikkasa', string="Kasa Plastik")
+    en2 = fields.Integer(string="En 2", default=0.0)
 
     kanban_state = fields.Selection([
         ('normal', 'In Progress'),
@@ -1322,19 +1593,7 @@ class ProjectTask(models.Model):
         ('blocked', 'Blocked')], string='Status',
         copy=False, default='normal', required=True, readonly=False, store=True)
 
-    # kanban_state_label = fields.Char(compute='_compute_kanban_state_label', string='Kanban State Label', tracking=True,
-    #                                  task_dependency_tracking=True)
-    #
-    # @api.depends('stage_id', 'kanban_state')
-    # def _compute_kanban_state_label(self):
-    #     for task in self:
-    #         if task.kanban_state == 'normal':
-    #             task.kanban_state_label = task.legend_normal
-    #         elif task.kanban_state == 'blocked':
-    #             task.kanban_state_label = task.legend_blocked
-    #         else:
-    #             task.kanban_state_label = task.legend_done
-    #
+   
 
 
 

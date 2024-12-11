@@ -28,7 +28,7 @@
         <field name="inherit_id" ref="project.view_task_tree2"/>
         <field name="arch" type="xml">
             <xpath expr="//field[@name='id']" position="attributes">
-                <attribute name="invisible">1</attribute>/>
+                <attribute name="invisible">1</attribute>
             </xpath>
             <xpath expr="//tree" position="attributes">
                 <!-- Satır eklemeye izin vermek için -->
@@ -37,8 +37,9 @@
             </xpath>
 
             <xpath expr="//field[@name='milestone_id']" position="attributes">
-                <attribute name="invisible">1</attribute>/>
+                <attribute name="invisible">1</attribute>
             </xpath>
+          
             <xpath expr="//field[@name='name']" position="after">
 
                 <field name="plastik" />
@@ -49,10 +50,12 @@
                 <field name="adet" />
                 <field name="tip" />
                 <field name="oda"/>
-                <field name="pop" optional="hide"/>
-                <field name="pap" optional="hide"/>
-                <field name="pbpo" optional="hide"/>
-                <field name="pbpa" optional="hide"/>
+                <field name="en2"/>
+                <field name="pk"/>
+                <field name="pop"/>
+                <field name="pap"/>
+                <field name="pbpo"/>
+                <field name="pbpa"/>
 
 
             </xpath>

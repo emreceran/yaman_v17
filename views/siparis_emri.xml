@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <odoo>
-    <template id="cnc_emri_timesheet_table">
+    <template id="siparis_emri_timesheet_table">
         <div class="row mt8">
             <div class="col-12">
                 <table class="table table-sm">
@@ -10,7 +10,18 @@
                     <tbody>
                         <tr t-foreach="lines" t-as="line" t-att-style="'background-color: #F1F1F1;' if line_index % 2 == 0 else ''">
                             <td class="align-middle">
-                                <h4 t-field="line.name"/>
+                       
+                                <!-- Büyük/Küçük Harf Duyarsız KASA Kontrolü -->
+                                <h4 t-if="'kasa' in line.name.lower()">
+                                    <span t-esc="'%s - %s' % (str(line.name), str(Kcolor.name))"/>
+                                </h4>
+
+                                <!-- Büyük/Küçük Harf Duyarsız PERVAZ Kontrolü -->
+                                <h4 t-elif="'pervaz' in line.name.lower()">
+                                    <span t-esc="'%s - %s' % (str(line.name), str(Pcolor.name))"/>
+                                </h4>
+
+
                             </td>
                         </tr>
                     </tbody>
@@ -19,7 +30,7 @@
         </div>
     </template>
 
-    <template id="cnc_emri_customized_header">
+    <template id="siparis_emri_customized_header">
         <div class="header">
             <div class="o_clean_header">
                 <div class="row" style="font-family:'Roboto',sans-serif">
@@ -27,16 +38,16 @@
                         <img t-if="res_company.logo" t-att-src="image_data_uri(res_company.logo)" alt="Logo"/>
                     </div>
                     <div class="col-5" >
-                        <h2>CNC EMRİ</h2>
+                        <h2>SATIN ALMA EMRİ</h2>
                     </div>
                 </div>
             </div>
         </div>
     </template>
 
-    <template id="cnc_emri">
+    <template id="siparis_emri">
         <t t-call="web.html_container">
-            <t t-call="yaman_v17.cnc_emri_customized_header"/>
+            <t t-call="yaman_v17.siparis_emri_customized_header"/>
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.internal_layout">
                     <div class="page">
@@ -47,7 +58,7 @@
                                 <table class="table table-sm">
                                     <thead>
                                         <tr>
-                                            <th colspan="2">cnc EMRİ</th>
+                                            <th colspan="2">SATIN ALMA EMRİ</th>
                                         </tr>
                                     </thead>
                                     <tbody>
@@ -57,57 +68,25 @@
                                             <td>Sipariş Tarihi :</td>
                                             <td><span t-esc="doc['create_date'].strftime('%d-%m -%Y')"/></td>
                                         </tr>
-
-                                        <tr>
-                                            <td>Kapı Modeli :  </td>
-                                            <td><t t-esc="doc.kapi_model"/></td>
-                                            <td>Yüzey Tipi :  </td>
-                                            <td><t t-esc="{'1': 'PVC', '2': 'LAKE', '3': 'MELAMİN', '4': 'LAMİNANT'}[doc.yuzey_tipi]"/></td>
-                                        </tr>
-
-                                        <tr>
-                                            <td>Seren Tipi :  </td>
-                                            <td><t t-esc="{ '1': 'AĞAÇ', '2': 'MDF'}[doc.seren_tipi]"/></td>
-                                            <td>Kasa Rengi :  </td>
-                                            <td><t t-esc="doc.kasa_rengi.name"/></td>
-
-                                        </tr>
-
-                                        <tr>
-                                            <td>Yüzey Rengi :  </td>
-                                            <td><t t-esc="doc.yuzey_rengi.name"/></td>
-                                            <td>Pervaz Rengi :  </td>
-                                            <td><t t-esc="doc.pervaz_rengi.name"/></td>
-                                        </tr>
-
-                                        <tr>
-                                            <td>Yüzey Kalınlığı :  </td>
-                                            <td><t t-esc="doc.yuzey_kalinlik"/>  <span> mm</span> </td>
-                                            <td>Kasa Tipi :  </td>
-                                            <td><t t-esc="{'1': 'DÜZ','2': 'BOMBE'}[doc.kasa_tipi]"/></td>
-                                        </tr>
                                     </tbody>
                                 </table>
-                                <div class="mt-1 mb-3"><span class="fw-bold">AÇIKLAMA : </span><t t-esc="doc.cnc_description"/></div>
+                                
                                 <h2>
-                                    <span> <t t-out="doc.name"/> Projesi için cnc Emirleri : </span>
+                                    <span> <t t-out="doc.name"/> Projesi için Satın Alma Emirleri : </span>
                                 </h2>
                             </div>
                         </div>
                         <br/>
 
-                        <t t-set="lines" t-value="docs.cnc_emirleri_getir()"/>
+                        <t t-set="lines" t-value="docs._siparis_emirleri_getir()"/>
+                        <t t-set="Pcolor" t-value="docs.pervaz_rengi"/>
+                        <t t-set="Kcolor" t-value="docs.kasa_rengi"/>
                         <t t-if="lines"> 
-                            <h2> CNC Emirleri</h2>
-                            <t t-call="yaman_v17.cnc_emri_timesheet_table"/>
+                            <h2> Satın Alma Emirleri</h2>
+                            <t t-call="yaman_v17.siparis_emri_timesheet_table"/>
                         </t>
 
-                        <div class="container">
-                            <div class="row">
-                                <img class="col-6" t-if="doc.image1" t-att-src="image_data_uri(doc.image1)" alt="Image 1" />
-                                <img class="col-6" t-if="doc.image2" t-att-src="image_data_uri(doc.image2)" alt="Image 2" />
-                            </div>
-                        </div>
+                        <div class="mt-1 mb-3"><span class="fw-bold">Köşe birleştirme takozu ve conta : </span><t t-esc="doc.plastik_kapi"/> Takım</div>
 
                         <div class="oe_structure"/>
                     </div>
@@ -117,7 +96,7 @@
     </template>
 
 
-    <record id="cnc_emri_paperformat" model="report.paperformat">
+    <record id="siparis_emri_paperformat" model="report.paperformat">
         <field name="name">Customized Paper Format</field>
         <field name="default" eval="True"/>
         <field name="format">custom</field>
@@ -133,14 +112,14 @@
         <field name="dpi">90</field>
     </record>
 
-    <record id="cnc_emri_report" model="ir.actions.report">
-        <field name="name">CNC Emri</field>
+    <record id="siparis_emri_report" model="ir.actions.report">
+        <field name="name">Satın Alma Emri</field>
         <field name="model">project.project</field>
         <field name="report_type">qweb-pdf</field>
-        <field name="report_name">yaman_v17.cnc_emri</field>
-        <field name="report_file">cnc_emri</field>
+        <field name="report_name">yaman_v17.siparis_emri</field>
+        <field name="report_file">siparis_emri</field>
         <field name="binding_model_id" ref="model_project_project"/>
         <field name="binding_type">report</field>
-        <field name="paperformat_id" ref="yaman_v17.cnc_emri_paperformat"/>
+        <field name="paperformat_id" ref="yaman_v17.siparis_emri_paperformat"/>
     </record>
 </odoo>

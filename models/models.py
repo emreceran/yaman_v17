@@ -18,7 +18,17 @@ class plastikpervaz(models.Model):
     _description = 'PLastik Pervaz'
 
     active = fields.Boolean('Active', default=True)
-    name = fields.Char(string='PLastik Pervaz tipi ', required=True, translate=True)
+    name = fields.Char(string='PLastik Pervaz kodu ', required=True, translate=True)
+    description = fields.Char(string='PLastik Pervaz adı ', required=True, translate=True)
+
+class plastikkasa(models.Model):
+    _name = "yaman.plastikkasa"
+    _description = 'PLastik Kasa'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='PLastik kasa kodu ', required=True, translate=True)
+    description = fields.Char(string='PLastik kasa adı ', required=True, translate=True)
+    value = fields.Char(string='PLastik kasa değeri ', required=True, translate=True)
 
 
 class Oda(models.Model):
@@ -27,3 +37,4 @@ class Oda(models.Model):
 
     active = fields.Boolean('Active', default=True)
     name = fields.Char(string='Oda', required=True, translate=True)
+

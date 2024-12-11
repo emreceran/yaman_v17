@@ -15,11 +15,12 @@
                 <button  name="cnc_emri" string="CNC Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
             </xpath>
             <xpath expr="//header" position="inside">
-                <button  name="plastik_emri" string="Plastik Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+                <button  name="plastik_siparis_emri" string="Plastik Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
             </xpath>
             <xpath expr="//field[@name='user_id']" position="replace">
 
                 <field name="toplam_kapi" />
+                <field name="plastik_kapi" />
                 <field name="kapali_toplam_kapi" />
                 <field name="scamli_toplam_kapi" />
                 <field name="citacamli_toplam_kapi" />
@@ -69,7 +70,9 @@
                     <field name="image2" widget="image"/>
 
                 </group>
-
+                <group class="w-100">
+                    <field name="cnc_description"/>
+                </group>
 
             </xpath>
 
@@ -96,6 +99,10 @@
                     <field name="kasa_rengi" />
                     <field name="yuzey_rengi" />
                     <field name="pervaz_rengi" />
+                    <field name="pervaz_rengi" />
+                    <field name="cam_citasi" />
+                    <field name="klapa_citasi" />
+                    <field name="supurge_adet" />
 
                     <field name="kasa_tipi" />
                     <field name="yuzey_kalinlik" />

@@ -30,6 +30,7 @@ Long description of module's purpose
         'views/catim_emri.xml',
         'views/sarma_emri.xml',
         'views/cnc_emri.xml',
+        'views/siparis_emri.xml',
     ],
     # only loaded in demonstration mode
     'demo': [
