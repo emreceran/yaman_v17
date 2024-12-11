@@ -39,7 +39,7 @@ class Project(models.Model):
     pd_genislik = fields.Integer(string="Pervaz Dış Genişlik")
     pb_genislik = fields.Integer(string="Pervaz Başlık Genişlik")
     hirdavat = fields.Char(string="Hırdavat")
-    cnc_description = fields.Text(string="CNC Emri Açıklaması" default="_")
+    cnc_description = fields.Text(string="CNC Emri Açıklaması", default="_")
     image1 = fields.Image("Resim")
     image2 = fields.Image("Resim")
 
