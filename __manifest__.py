@@ -31,6 +31,7 @@ Long description of module's purpose
         'views/sarma_emri.xml',
         'views/cnc_emri.xml',
         'views/siparis_emri.xml',
+        'views/wizards.xml',
     ],
     # only loaded in demonstration mode
     'demo': [

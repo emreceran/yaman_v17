@@ -5,20 +5,30 @@
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.edit_project"/>
         <field name="arch" type="xml">
-            <xpath expr="//header" position="inside">
-                <button  name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight"  data-hotkey="ö"/>
+
+            
+           <xpath expr="//header" position="inside">
+                <!-- Sarım Emri Button -->
+                <button name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight sarim-emri-btn"/>
             </xpath>
             <xpath expr="//header" position="inside">
-                <button  name="catim_emri" string="Çatım Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+                <!-- Çatım Emri Button -->
+                <button name="catim_emri" string="Çatım Emri Oluştur" type="object" class="oe_highlight catim-emri-btn"/>
             </xpath>
             <xpath expr="//header" position="inside">
-                <button  name="cnc_emri" string="CNC Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+                <!-- CNC Emri Button -->
+                <button name="cnc_emri" string="CNC Emri Oluştur" type="object" class="oe_highlight cnc-emri-btn"/>
             </xpath>
             <xpath expr="//header" position="inside">
-                <button  name="plastik_siparis_emri" string="Plastik Emri Oluştur" type="object"  class="oe_highlight"   data-hotkey="ç"/>
+                <!-- Plastik Sipariş Emri Button -->
+                <button name="plastik_siparis_emri" string="Satın Alma Emri Oluştur" type="object" class="oe_highlight plastik-emri-btn"/>
             </xpath>
             <xpath expr="//field[@name='user_id']" position="replace">
 
+                <field name="sarim_emri_disabled" />
+                <field name="catim_emri_disabled" />
+                <field name="cnc_emri_disabled" />
+                <field name="plastik_emri_disabled" />
                 <field name="toplam_kapi" />
                 <field name="plastik_kapi" />
                 <field name="kapali_toplam_kapi" />
@@ -52,7 +62,7 @@
                     <field name="pervaz_rengi" />
                     <field name="cam_citasi" />
                     <field name="klapa_citasi" />
-                    <field name="supurge_adet" />
+                    <field name="supurgelik" />
 
                 </group>
                 <group>
@@ -102,7 +112,7 @@
                     <field name="pervaz_rengi" />
                     <field name="cam_citasi" />
                     <field name="klapa_citasi" />
-                    <field name="supurge_adet" />
+                    <field name="supurgelik" />
 
                     <field name="kasa_tipi" />
                     <field name="yuzey_kalinlik" />

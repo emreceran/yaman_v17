@@ -37,3 +37,15 @@ class Oda(models.Model):
     active = fields.Boolean('Active', default=True)
     name = fields.Char(string='Oda', required=True, translate=True)
 
+class EmirWizard(models.TransientModel):
+    _name = 'emir.wizard'
+    _description = '...'
+    
+    message = fields.Text(string="mesaj")
+
+
+    def confirm_action(self):
+        # Onaylandıktan sonra yapılacak işlem (isteğe bağlı)
+        return {'type': 'ir.actions.act_window_close'}
+
+

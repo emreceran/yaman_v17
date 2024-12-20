@@ -71,12 +71,11 @@
                                             <td><span t-esc="doc['create_date'].strftime('%d-%m -%Y')"/></td>
                                         </tr>
 
-1
                                         <tr>
                                             <td>Kasa Tipi :  </td>
                                             <td><t t-esc="{'1': 'DÜZ','2': 'BOMBE'}[doc.kasa_tipi]"/></td>
                                             <td>Yüzey Tipi :  </td>
-                                            <td><t t-e1sc="{'1': 'PVC', '2': 'LAKE', '3': 'MELAMİN', '4': 'LAMİNANT'}[doc.yuzey_tipi]"/></td>
+                                            <td><t t-esc="{'1': 'PVC', '2': 'LAKE', '3': 'MELAMİN', '4': 'LAMİNANT'}[doc.yuzey_tipi]"/></td>
                                         </tr>
 
                                         <tr>
@@ -125,6 +124,7 @@
 
                         <t t-set="lines" t-value="docs._plastik_yuzey_emirleri_getir()"/>
                         <t t-if="lines"> 
+                            <t t-set="color" t-value="docs.yuzey_rengi"/>
                             <h4> Plastik Yüzey Emirleri : </h4>
                             <t t-call="yaman_v17.sarim_emri_timesheet_table"/>
                         </t>
@@ -135,25 +135,43 @@
                             <h4> MDF Yüzey Emirleri : </h4>
                             <t t-call="yaman_v17.sarim_emri_timesheet_table"/>
                         </t>
-
-                        <t t-set="citalar" t-value="docs.cam_citalari_getir()"/>
-                        <p>
-                            Gerekli cam çıtası : <t t-out="citalar[0]"/>
-                        </p>
-
-                        <p>
-                            Gerekli klepa çıtası : <t t-out="citalar[1]"/>
-                        </p>
-
-                        <p>
-                            Gerekli bini çıtası : <t t-out="citalar[2]"/>
-                        </p>
-
-                        <p>
-                            Toplam süpürge adeti : <t t-out="doc.supurge_adet"/>
-                        </p>
-
-
+                       
+                        <h4> Çıta Emirleri : </h4>
+                        <div class="row mt8">
+                            <div class="col-12">
+                                <table class="table table-sm">
+                                    <thead>
+                                        <tr>
+                                            <th class="text-start align-middle"><span>Emirler </span></th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <t t-set="citalar" t-value="docs.cam_citalari_getir()"/>
+                                        <t t-set="color" t-value="docs.yuzey_rengi"/>
+                                        <tr style="background-color: #F1F1F1;">
+                                            <td class="align-middle">
+                                                <h4>Cam Çıtası: <t t-esc="'%s - %s' % (citalar[0], color.name)"/></h4>
+                                            </td>
+                                        </tr>
+                                        <tr style="">
+                                            <td class="align-middle">
+                                                <h4>Klepa Çıtası: <t t-esc="'%s - %s' % (citalar[1], color.name)"/></h4>
+                                            </td>
+                                        </tr>
+                                        <tr style="background-color: #F1F1F1;">
+                                            <td class="align-middle">
+                                                <h4>Bini Çıtası: <t t-esc="'%s - %s' % (citalar[2], color.name)"/></h4>
+                                            </td>
+                                        </tr>
+                                        <tr style="">
+                                            <td class="align-middle">
+                                                <h4>Süpürgelik: <t t-esc="'%s - %s' % (doc.supurgelik, color.name)"/></h4>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                         <div class="oe_structure"/>
                     </div>
                 </t>
