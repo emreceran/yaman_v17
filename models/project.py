@@ -480,7 +480,6 @@ class Project(models.Model):
         bini_cita_adet = bini_cita_adet * 2
 
         liste = [cam_cita_adet, klapa_adet, bini_cita_adet]
-        dict = {'cam_cita_adet': cam_cita_adet, 'klapa_adet': klapa_adet, 'bini_cita_adet': bini_cita_adet}
         return liste
 
 
@@ -1377,7 +1376,7 @@ class Project(models.Model):
                 
     # *******************************************************************************************************************************************
 
-            citali_enler = set([a.en for a in kapali_gorevler if a.en <= 100])
+            citali_enler = set([a.en for a in citali_gorevler if a.en <= 100])
 
             citaliadetler = []
 
@@ -1845,7 +1844,7 @@ class Project(models.Model):
 
             gorevler = self.uretim_emirleri()
             kapali_gorevler = [gorev for gorev in gorevler if
-                            gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '2' and gorev.en <=100]
+                            gorev.tip in ['1', '2', '3', '5', '6', '7', '8', '9', '10'] and gorev.plastik == '2' and gorev.en <=100]
 
             kapali_gorevler_adetli = []
 
@@ -1859,21 +1858,18 @@ class Project(models.Model):
                         gorev.boy) + " cm " + \
                                 str(gorev.en) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
-                    if gorev.tip == 3 :
+                    if gorev.tip == '3' :
+                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy-5) + " cm " + str(
+                                                    gorev.en - 5) + " cm  "
+                    elif gorev.tip == '7' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en - 5) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                    elif gorev.tip == 7 :
+                                                    gorev.en) + " cm  "
+                    elif gorev.tip == '10' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                    elif gorev.tip == 10 :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
-                                                    gorev.en) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en) + " cm "
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                         gorev.boy - 3) + " cm " + \
@@ -1904,7 +1900,7 @@ class Project(models.Model):
 
             gorevler = self.uretim_emirleri()
             kapali_gorevler = [gorev for gorev in gorevler if
-                            gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '2' and gorev.en > 100]
+                            gorev.tip in ['1', '2', '3', '5', '6', '7', '8', '9', '10'] and gorev.plastik == '2' and gorev.en > 100]
 
             kapali_gorevler_adetli = []
 
@@ -1924,43 +1920,28 @@ class Project(models.Model):
                         gorev.boy) + " cm " + \
                                 str(gorev.en - gorev.en2) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
-                    if gorev.tip == 3 :
+                    if gorev.tip == '3' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en2) + " cm  "
                         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en - gorev.en2 - 6) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                    elif gorev.tip == 7 :
+                                                    gorev.en - gorev.en2 - 6) + " cm  "
+                    elif gorev.tip == '7' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en2) + " cm  "
                         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en - gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en - gorev.en2) + " cm  "
                         
-                    elif gorev.tip == 10 :
+                    elif gorev.tip == '10' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     gorev.boy) + " cm " + str(
-                                                    gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en2) + " cm  "
                         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     gorev.boy) + " cm " + str(
-                                                    gorev.en - gorev.en2 - 6) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                                                    
-                    
-                    
-                    
-        
-                    
-                    
-                    
-                    
+                                                    gorev.en - gorev.en2 - 6) + " cm  "
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                         gorev.boy - 3) + " cm " + \
@@ -1994,7 +1975,7 @@ class Project(models.Model):
 
             gorevler = self.uretim_emirleri()
             kapali_gorevler = [gorev for gorev in gorevler if
-                            gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '1' and gorev.en <= 100]
+                            gorev.tip in ['1', '2', '3', '5', '6', '7', '8', '9', '10'] and gorev.plastik == '1' and gorev.en <= 100]
 
             kapali_gorevler_adetli = []
 
@@ -2008,21 +1989,19 @@ class Project(models.Model):
                         gorev.boy) + " cm " + \
                                 str(gorev.en) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
-                    if gorev.tip == 3 :
+                    if gorev.tip == '3' :
+                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy-5) + " cm " + str(
+                                                    gorev.en - 5) + " cm  "
+                    elif gorev.tip == '7' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en - 5) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                    elif gorev.tip == 7 :
+                                                    gorev.en) + " cm  " 
+                                                    
+                    elif gorev.tip == '10' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                    elif gorev.tip == 10 :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
-                                                    gorev.en) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en) + " cm  "
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                         gorev.boy - 3) + " cm " + \
@@ -2052,7 +2031,7 @@ class Project(models.Model):
 
             gorevler = self.uretim_emirleri()
             kapali_gorevler = [gorev for gorev in gorevler if
-                            gorev.tip in ['1', '2', '5', '6', '8', '9'] and gorev.plastik == '1' and gorev.en > 100]
+                            gorev.tip in ['1', '2', '3', '5', '6', '7', '8', '9', '10'] and gorev.plastik == '1' and gorev.en > 100]
 
             kapali_gorevler_adetli = []
 
@@ -2072,24 +2051,20 @@ class Project(models.Model):
                         gorev.boy) + " cm " + \
                                 str(gorev.en - gorev.en2) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
-                    if gorev.tip == 3 :
+                    if gorev.tip == '3' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en2) + " cm  "
                         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en - gorev.en2 - 6) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
-                    elif gorev.tip == 7 :
+                                                    gorev.en - gorev.en2 - 6) + " cm  "
+                    elif gorev.tip == '7' :
                         gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en2) + " cm  "
                         gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     210) + " cm " + str(
-                                                    gorev.en - gorev.en2) + " cm  " + str(
-                                                    gorev.adet) + " Adet"
+                                                    gorev.en - gorev.en2) + " cm  "
                         
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
@@ -2253,7 +2228,7 @@ class Project(models.Model):
                 
             for key in result:
                 adet = result[key]
-                gorev_adi = f"{key[0]}:{key[1]}:{adet}"
+                gorev_adi = f"{key[0]}:{key[1]}:{adet} adet"
                 self.env['project.task'].create({
                     'project_id': self.id,
                     'allocated_hours': adet,
