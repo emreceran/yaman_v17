@@ -2,6 +2,8 @@
     <template id="assets_backend" inherit_id="web.assets_backend">
         <xpath expr="." position="inside">
             <script type="text/javascript" src="/yaman.v17/static/src/js/disabled_buttons.js"></script>
+            <link rel="stylesheet" type="text/css" href="/yaman.v17/static/src/css/project_emri.css"/>
+
         </xpath>
     </template>
 </odoo>

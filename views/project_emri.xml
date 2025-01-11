@@ -1,0 +1,168 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="project_emri_timesheet_table">
+        <div class="row mt8">
+            <div class="col-12">
+                <table class="table table-sm text-center">
+                    <thead>
+                        <tr>
+                            <td class="align-middle border">
+                                <h3>No</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>Plastik</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>Kasa Eni</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>En</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>Boy</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>Adet</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>Tip</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>Oda</h3>
+                            </td>
+                            <td class="align-middle border">
+                                <h3>En2</h3>
+                            </td>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr t-foreach="lines" t-as="line" t-att-style="'background-color: #F1F1F1;' if line_index % 2 == 0 else ''">
+                            <td class="align-middle border">
+                                <h4 t-field="line.name"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.plastik"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.kasa_eni"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.en"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.boy"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.adet"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.tip"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.oda"/>
+                            </td>
+                            <td class="align-middle border">
+                                <h4 t-field="line.en2"/>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </template>
+
+    <template id="project_emri_customized_header">
+        <div class="header">
+            <div class="o_clean_header">
+                <div class="row" style="font-family:'Roboto',sans-serif">
+                    <div class="col-7">
+                        <img t-if="res_company.logo" t-att-src="image_data_uri(res_company.logo)" alt="Logo"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </template>
+
+   
+    <template id="project_emri">
+        <t t-call="web.html_container">
+            <t t-call="yaman_v17.project_emri_customized_header"/>
+            <t t-foreach="docs" t-as="doc">
+                <t t-call="web.internal_layout">
+                    <div class="page">
+                        <div class="oe_structure"/>
+                        <div class="container-fluid mb-5">
+                            <t t-set="fields" t-value="doc.get_field_groups()"/>
+                            <t t-foreach="doc.get_field_groups()" t-as="field">
+                                <div class="row">
+                                    <t t-if="field[0]"> 
+                                        <div class="col-3 border-bottom p-1 bg-light fw-bold">
+                                            <t t-esc="field[0]['label']"/>:
+                                        </div>
+                                        <div class="col-3 border-bottom p-1">
+                                            <t t-esc="field[0]['value']"/>
+                                        </div>
+                                    </t>
+                                    <t t-if="field[1]['value']!=''"> 
+                                        <div class="col-3 border-bottom p-1 bg-light fw-bold">
+                                            <t t-esc="field[1]['label']"/>:
+                                        </div>
+                                        <div class="col-3 border-bottom p-1">
+                                            <t t-esc="field[1]['value']"/>
+                                        </div>
+                                    </t>
+                                </div>
+                            </t>
+                        </div>
+                        <t t-set="lines" t-value="docs.uretim_emirleri()[::-1]"/>
+                        <t t-if="lines"> 
+                            <t t-call="yaman_v17.project_emri_timesheet_table"/>
+                        </t>
+
+                        
+
+                        <div class="oe_structure"/>
+                    </div>
+                    <div style="page-break-before: always;">
+
+                        
+                        <div class="container">
+                            <div class="row text-center">
+                                <img class="col-9" t-if="doc.image1" t-att-src="image_data_uri(doc.image1)" alt="Image 1" />
+                                <img class="col-9" t-if="doc.image2" t-att-src="image_data_uri(doc.image2)" alt="Image 2" />
+                            </div>
+                        </div>
+                    </div>
+                </t>
+            </t>
+        </t>
+        
+    </template>
+
+    <record id="project_emri_paperformat" model="report.paperformat">
+        <field name="name">Customized Paper Format</field>
+        <field name="default" eval="True"/>
+        <field name="format">custom</field>
+        <field name="page_height">297</field>
+        <field name="page_width">210</field>
+        <field name="orientation">Portrait</field>
+        <field name="margin_top">30</field>
+        <field name="margin_bottom">10</field>
+        <field name="margin_left">5</field>
+        <field name="margin_right">5</field>
+        <field name="header_line" eval="False"/>
+        <field name="header_spacing">22</field>
+        <field name="dpi">90</field>
+    </record>
+
+    <record id="project_emri_report" model="ir.actions.report">
+        <field name="name">Proje Kapağı</field>
+        <field name="model">project.project</field>
+        <field name="report_type">qweb-pdf</field>
+        <field name="report_name">yaman_v17.project_emri</field>
+        <field name="report_file">project_emri</field>
+        <field name="binding_model_id" ref="model_project_project"/>
+        <field name="binding_type">report</field>
+        <field name="paperformat_id" ref="yaman_v17.project_emri_paperformat"/>
+    </record>
+</odoo>

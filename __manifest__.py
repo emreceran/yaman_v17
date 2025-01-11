@@ -23,7 +23,6 @@ Long description of module's purpose
     # always loaded
     'data': [
         'security/ir.model.access.csv',
-        'views/views.xml',
         'views/templates.xml',
         'views/project.xml',
         'views/task.xml',
@@ -31,6 +30,7 @@ Long description of module's purpose
         'views/sarma_emri.xml',
         'views/cnc_emri.xml',
         'views/siparis_emri.xml',
+        'views/project_emri.xml',
         'views/wizards.xml',
     ],
     # only loaded in demonstration mode

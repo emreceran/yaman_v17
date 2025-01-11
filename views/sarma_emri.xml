@@ -135,61 +135,58 @@
                             <h4> MDF Yüzey Emirleri : </h4>
                             <t t-call="yaman_v17.sarim_emri_timesheet_table"/>
                         </t>
-                       
-                       <h4> Çıta Emirleri : </h4>
-<div class="row mt8">
-    <div class="col-12">
-        <t t-set="citalar" t-value="docs.cam_citalari_getir()"/>
-        <t t-set="color" t-value="docs.yuzey_rengi"/>
 
-        <!-- Tablonun tamamını gizlemek için kontrol -->
-        <t t-if="any(c != 0 for c in citalar) or doc.supurgelik != 0">
-            <table class="table table-sm">
-                <thead>
-                    <tr>
-                        <th class="text-start align-middle"><span>Emirler</span></th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <!-- Cam Çıtası Kontrol -->
-                    <t t-if="citalar[0] != 0">
-                        <tr style="background-color: #F1F1F1;">
-                            <td class="align-middle">
-                                <h4>Cam Çıtası: <t t-esc="'%s - %s' % (citalar[0], color.name)"/></h4>
-                            </td>
-                        </tr>
-                    </t>
-                    <!-- Klepa Çıtası Kontrol -->
-                    <t t-if="citalar[1] != 0">
-                        <tr style="">
-                            <td class="align-middle">
-                                <h4>Klepa Çıtası: <t t-esc="'%s - %s' % (citalar[1], color.name)"/></h4>
-                            </td>
-                        </tr>
-                    </t>
-                    <!-- Bini Çıtası Kontrol -->
-                    <t t-if="citalar[2] != 0">
-                        <tr style="background-color: #F1F1F1;">
-                            <td class="align-middle">
-                                <h4>Bini Çıtası: <t t-esc="'%s - %s' % (citalar[2], color.name)"/></h4>
-                            </td>
-                        </tr>
-                    </t>
-                    <!-- Süpürgelik Kontrol -->
-                    <t t-if="doc.supurgelik != 0">
-                        <tr style="">
-                            <td class="align-middle">
-                                <h4>Süpürgelik: <t t-esc="'%s - %s' % (doc.supurgelik, color.name)"/></h4>
-                            </td>
-                        </tr>
-                    </t>
-                </tbody>
-            </table>
-        </t>
-       
-    </div>
-</div>
-
+                        <t t-set="citalar" t-value="docs.cam_citalari_getir()"/>
+                        <t t-set="color" t-value="docs.yuzey_rengi"/>
+                        <t t-if="any(c != 0 for c in citalar) or doc.supurgelik != '0'">
+                            <h4> Çıta Emirleri : </h4>
+                            <div class="row mt8">
+                                <div class="col-12">
+                                    
+                                    <table class="table table-sm">
+                                        <thead>
+                                            <tr>
+                                                <th class="text-start align-middle"><span>Emirler</span></th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <!-- Cam Çıtası Kontrol -->
+                                            <t t-if="citalar[0] != 0">
+                                                <tr style="background-color: #F1F1F1;">
+                                                    <td class="align-middle">
+                                                        <h4>Cam Çıtası: <t t-esc="'%s Adet - %s' % (citalar[0], color.name)"/></h4>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <!-- Klepa Çıtası Kontrol -->
+                                            <t t-if="citalar[1] != 0">
+                                                <tr style="">
+                                                    <td class="align-middle">
+                                                        <h4>Klepa Çıtası: <t t-esc="'%s Adet - %s' % (citalar[1], color.name)"/></h4>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <!-- Bini Çıtası Kontrol -->
+                                            <t t-if="citalar[2] != 0">
+                                                <tr style="background-color: #F1F1F1;">
+                                                    <td class="align-middle">
+                                                        <h4>Bini Çıtası: <t t-esc="'%s Adet - %s' % (citalar[2], color.name)"/></h4>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                            <!-- Süpürgelik Kontrol -->
+                                            <t t-if="doc.supurgelik != '0'">
+                                                <tr style="">
+                                                    <td class="align-middle">
+                                                        <h4>Süpürgelik: <t t-esc="'%s Adet - %s' % (doc.supurgelik, color.name)"/></h4>
+                                                    </td>
+                                                </tr>
+                                            </t>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </t>
                         <div class="oe_structure"/>
                     </div>
                 </t>
@@ -214,12 +211,6 @@
         <field name="header_spacing">22</field>
         <field name="dpi">90</field>
     </record>
-
-
-
-
-
-
 
     <record id="timesheet_report_project" model="ir.actions.report">
         <field name="name">Sarım Emri</field>

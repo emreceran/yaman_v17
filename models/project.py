@@ -1,5 +1,8 @@
 # -*- coding: utf-8 -*-
 
+import base64
+import io
+from PIL import Image
 from odoo import models, fields, api
 from odoo.exceptions import ValidationError # type: ignore
 from odoo.exceptions import UserError # type: ignore
@@ -241,6 +244,7 @@ class Project(models.Model):
         for record in self:
             record.sadece_scamli_toplam_kapi = str(toplam_adet)
 
+
     @api.depends('task_ids', 'task_ids.stage_id')
     def check_stage_tasks(self):
         for record in self:
@@ -267,13 +271,111 @@ class Project(models.Model):
             
             
 
+    def tip_plastik_toplam_kapi(self, tip):
+        tasks = self.task_ids
+        plastik_toplam_kapi = []
+        for gorev in tasks:
+            if gorev.stage_id.name == "satırlar":
+                if gorev.tip == tip and gorev.plastik=='1':
+                    plastik_toplam_kapi.append(gorev)
 
+        toplam_adet = 0
+        for i in plastik_toplam_kapi:
+            toplam_adet += i.adet
 
         
-        
+        return toplam_adet
     
-    
+    def tip_mdf_toplam_kapi(self, tip):
+        tasks = self.task_ids
+        mdf_toplam_kapi = []
+        for gorev in tasks:
+            if gorev.stage_id.name == "satırlar":
+                if gorev.tip == tip and gorev.plastik=='2':
+                    mdf_toplam_kapi.append(gorev)
+
+        toplam_adet = 0
+        for i in mdf_toplam_kapi:
+            toplam_adet += i.adet
+
         
+        return toplam_adet
+
+    def process_image(self, image_data):
+        
+        with Image.open(io.BytesIO(base64.b64decode(image_data))) as img:
+            img = img.resize((800, 600))  # Daha küçük boyutlara indir
+            output = io.BytesIO()
+            img.save(output, format="JPEG", quality=85)
+            return base64.b64encode(output.getvalue()).decode('utf-8')
+
+    def get_field_groups(self):
+        fields = [
+            {"label": "Müşteri", "value": self.partner_id.name if self.partner_id.name else None},
+            {"label": "Ölçüyü Alan", "value": self.olcu_alan.name if self.olcu_alan else None},
+            {"label": "Kaydı Giren", "value": self.kaydi_giren.name if self.kaydi_giren else None},
+            {"label": "Kapı Modeli", "value": self.kapi_model or None},
+            {"label": "Yüzey Tipi", "value": dict(self._fields['yuzey_tipi'].selection).get(self.yuzey_tipi, None)},
+            {"label": "Seren Tipi", "value": dict(self._fields['seren_tipi'].selection).get(self.seren_tipi, None)},
+            {"label": "Kasa Rengi", "value": self.kasa_rengi.name if self.kasa_rengi else None},
+            {"label": "Yüzey Rengi", "value": self.yuzey_rengi.name if self.yuzey_rengi else None},
+            {"label": "Pervaz Rengi", "value": self.pervaz_rengi.name if self.pervaz_rengi else None},
+            {"label": "Yüzey Kalınlığı", "value": self.yuzey_kalinlik if self.yuzey_kalinlik else None},
+            {"label": "Kasa Tipi", "value": dict(self._fields['kasa_tipi'].selection).get(self.kasa_tipi, None)},
+            {"label": "Pervaz İç Kalınlık", "value": self.pit_kalinlik if self.pit_kalinlik else None},
+            {"label": "Pervaz Dış Kalınlık", "value": self.pdt_kalinlik if self.pdt_kalinlik else None},
+            {"label": "Pervaz Başlık Kalınlık", "value": self.pb_kalinlik if self.pb_kalinlik else None},
+            {"label": "Pervaz İç Genişlik", "value": self.pi_genislik if self.pi_genislik else None},
+            {"label": "Pervaz Dış Genişlik", "value": self.pd_genislik if self.pd_genislik else None},
+            {"label": "Pervaz Başlık Genişlik", "value": self.pb_genislik if self.pb_genislik else None},
+            {"label": "Toplam Kapı Sayısı", "value": self.toplam_kapi or None},
+            {"label": "MDF Kapı Sayısı", "value": (int(self.toplam_kapi) - int(self.plastik_kapi)) or None},
+            {"label": "Plastik Kapı Sayısı", "value": self.plastik_kapi or None},
+            # {"label": "Kapalı Kapı Sayısı", "value": self.kapali_toplam_kapi or None},
+            {"label": "Plastik Kapalı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('1') or None},
+            {"label": "MDF Kapalı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('1') or None},
+            # {"label": "Ç. Camlı Kapı Sayısı", "value": self.citacamli_toplam_kapi or None},
+            {"label": "Plastik Ç. Camlı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('2') or None},
+            {"label": "MDF Ç. Camlı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('2') or None},
+            # {"label": "S. Camlı Kapı Sayısı", "value": self.scamli_toplam_kapi or None},
+            {"label": "Plastik S. Camlı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('3') or None},
+            {"label": "MDF S. Camlı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('3') or None},
+            # {"label": "Sürgülü Kapalı Kapı Sayısı", "value": self.surgulu_kapali_toplam_kapi or None},
+            {"label": "Plastik Sürgülü Kapalı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('5') or None},
+            {"label": "MDF Sürgülü Kapalı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('5') or None},
+            # {"label": "Sürgülü Ç. Camlı Kapı Sayısı", "value": self.surgulu_citacamli_toplam_kapi or None},
+            {"label": "Plastik Sürgülü Ç. Camlı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('6') or None},
+            {"label": "MDF Sürgülü Ç. Camlı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('6') or None},
+            # {"label": "Sürgülü S. Camlı Kapı Sayısı", "value": self.surgulu_scamli_toplam_kapi or None},
+            {"label": "Plastik Sürgülü S. Camlı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('7') or None},
+            {"label": "MDF Sürgülü S. Camlı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('7') or None},
+            # {"label": "Sadece Kapalı Kapı Sayısı", "value": self.sadece_kapali_toplam_kapi or None},
+            {"label": "Plastik Sadece Kapalı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('8') or None},
+            {"label": "MDF Sadece Kapalı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('8') or None},
+            # {"label": "Sadece Ç. Camlı Kapı Sayısı", "value": self.sadece_citacamli_toplam_kapi or None},
+            {"label": "Plastik Sadece Ç. Camlı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('9') or None},
+            {"label": "MDF Sadece Ç. Camlı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('9') or None},
+            # {"label": "Sadece S. Camlı Kapı Sayısı", "value": self.sadece_scamli_toplam_kapi or None},
+            {"label": "Plastik Sadece S. Camlı Kapı Sayısı", "value": self.tip_plastik_toplam_kapi('10') or None},
+            {"label": "MDF Sadece S. Camlı Kapı Sayısı", "value": self.tip_mdf_toplam_kapi('10') or None},
+            {"label": "Cam Çıtası", "value": self.cam_citasi or None},
+            {"label": "Klapa Çıtası", "value": self.klapa_citasi or None},
+            {"label": "Süpürgelik", "value": self.supurgelik or None},
+            {"label": "Hırdavat", "value": self.hirdavat or None},
+        ]
+
+        # Boş (None) ve 0 değerlerini filtrele
+        filtered_fields = [field for field in fields if field['value'] not in [0, '0', None]]
+        
+        # Eğer liste tek sayıda eleman içeriyorsa, bir yer tutucu ekle
+        if len(filtered_fields) % 2 != 0:
+            filtered_fields.append({"label": "", "value": ""})
+        
+        # İkişerli gruplara böl
+        grouped_fields = [filtered_fields[i:i+2] for i in range(0, len(filtered_fields), 2)]
+            
+        return grouped_fields
+
     def uretim_emirleri(self):
         tasks = self.task_ids
 
@@ -478,8 +580,16 @@ class Project(models.Model):
         for kapi in buyuk_yuz_gorevler:
             bini_cita_adet += kapi.adet
         bini_cita_adet = bini_cita_adet * 2
-
-        liste = [cam_cita_adet, klapa_adet, bini_cita_adet]
+        
+        salmaCamlilar = [gorev for gorev in gorevler if gorev.tip == "3"] 
+        buyuk_yuz_salmaCamlilar = [gorev for gorev in salmaCamlilar if gorev.en > 100]
+        salmaCamlilar_bini_cita_adet = 0
+        for kapi in buyuk_yuz_salmaCamlilar:
+           salmaCamlilar_bini_cita_adet += kapi.adet
+        salmaCamlilar_bini_cita_adet = salmaCamlilar_bini_cita_adet * 2
+        
+        
+        liste = [cam_cita_adet, klapa_adet, bini_cita_adet + salmaCamlilar_bini_cita_adet]
         return liste
 
 
@@ -769,7 +879,7 @@ class Project(models.Model):
                 'allocated_hours': i["adet"] * 2,
                 'stage_id': sarma_emri_stage_id,
                 'plastik': plastik,
-                'name': f"SALMA CAMLI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 6} cm {i['adet'] * 2} Adet"
+                'name': f"SALMA CAMLI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 5} cm {i['adet'] * 2} Adet"
             })
 
 
@@ -827,7 +937,7 @@ class Project(models.Model):
                 'allocated_hours': i["adet"] * 2,
                 'stage_id': sarma_emri_stage_id,
                 'plastik': plastik,
-                'name': f"ÇITALI YÜZEY {self.yuzey_kalinlik}mm 210 cm {i['en'] - i['en2'] - 5} cm {i['adet'] * 2} Adet"
+                'name': f"ÇITALI YÜZEY {self.yuzey_kalinlik}mm 210 cm {i['en'] - i['en2'] - 4} cm {i['adet'] * 2} Adet"
             })
 
 
@@ -878,7 +988,7 @@ class Project(models.Model):
                 'allocated_hours': i["adet"] * 2,
                 'stage_id': sarma_emri_stage_id,
                 'plastik': plastik,
-                'name': f"ÇITALI YÜZEY 18mm 210 cm {i['en2'] + 1} cm {i['adet'] * 2} Adet"
+                'name': f"KAPALI YÜZEY 18mm 210 cm {i['en2'] + 1} cm {i['adet'] * 2} Adet"
             })
 
             self.env['project.task'].create({
@@ -886,7 +996,7 @@ class Project(models.Model):
                 'allocated_hours': i["adet"] * 2,
                 'stage_id': sarma_emri_stage_id,
                 'plastik': plastik,
-                'name': f"ÇITALI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 5} cm {i['adet'] * 2} Adet"
+                'name': f"KAPALI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 4} cm {i['adet'] * 2} Adet"
             })
 
 
@@ -1117,7 +1227,7 @@ class Project(models.Model):
                 'allocated_hours': i["adet"] * 2,
                 'stage_id': sarma_emri_stage_id,
                 'plastik': plastik,
-                'name': "SADECE SALMA CAMLI YÜZEY 18mm " + str(i["boy"]) + " cm " + str(i["en"] - i["en2"] - 6) + " cm  " + str(i["adet"] * 2) + " Adet"
+                'name': "SADECE SALMA CAMLI YÜZEY 18mm " + str(i["boy"]) + " cm " + str(i["en"] - i["en2"]) + " cm  " + str(i["adet"] * 2) + " Adet"
             })
 
 
@@ -1370,7 +1480,7 @@ class Project(models.Model):
                     'project_id': self.id,
                     'allocated_hours': i["adet"] * 2,
                     'stage_id': cnc_emri_stage_id,
-                    'name': f"SALMA CAMLI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 6} cm {i['adet'] * 2} Adet"
+                    'name': f"SALMA CAMLI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 5} cm {i['adet'] * 2} Adet"
                 })
 
                 
@@ -1414,14 +1524,14 @@ class Project(models.Model):
                     'project_id': self.id,
                     'allocated_hours': i["adet"] * 2,
                     'stage_id': cnc_emri_stage_id,
-                    'name': f"ÇITALI YÜZEY 18mm 210 cm {i['en2'] + 1} cm {i['adet'] * 2} Adet"
+                    'name': f"ÇITALI YÜZEY {self.yuzey_kalinlik} mm 210 cm {i['en2'] + 1} cm {i['adet'] * 2} Adet"
                 })
 
                 self.env['project.task'].create({
                     'project_id': self.id,
                     'allocated_hours': i["adet"] * 2,
                     'stage_id': cnc_emri_stage_id,
-                    'name': f"ÇITALI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 5} cm {i['adet'] * 2} Adet"
+                    'name': f"ÇITALI YÜZEY {self.yuzey_kalinlik} mm 210 cm {i['en'] - i['en2'] - 4} cm {i['adet'] * 2} Adet"
                 })
 
     # *******************************************************************************************************************************************
@@ -1465,14 +1575,14 @@ class Project(models.Model):
                     'project_id': self.id,
                     'allocated_hours': i["adet"] * 2,
                     'stage_id': cnc_emri_stage_id,
-                    'name': f"ÇITALI YÜZEY 18mm 210 cm {i['en2'] + 1} cm {i['adet'] * 2} Adet"
+                    'name': f"KAPALI YÜZEY {self.yuzey_kalinlik} mm 210 cm {i['en2'] + 1} cm {i['adet'] * 2} Adet"
                 })
 
                 self.env['project.task'].create({
                     'project_id': self.id,
                     'allocated_hours': i["adet"] * 2,
                     'stage_id': cnc_emri_stage_id,
-                    'name': f"ÇITALI YÜZEY 18mm 210 cm {i['en'] - i['en2'] - 5} cm {i['adet'] * 2} Adet"
+                    'name': f"KAPALI YÜZEY {self.yuzey_kalinlik} mm 210 cm {i['en'] - i['en2'] - 4} cm {i['adet'] * 2} Adet"
                 })
                 
     # *******************************************************************************************************************************************
@@ -1675,7 +1785,7 @@ class Project(models.Model):
                     'project_id': self.id,
                     'allocated_hours': i["adet"] * 2,
                     'stage_id': cnc_emri_stage_id,
-                    'name': "SADECE SALMA CAMLI YÜZEY 18mm " + str(i["boy"]) + " cm " + str(i["en"] - i["en2"] - 6) + " cm  " + str(i["adet"] * 2) + " Adet"
+                    'name': "SADECE SALMA CAMLI YÜZEY 18mm " + str(i["boy"]) + " cm " + str(i["en"] - i["en2"]) + " cm  " + str(i["adet"] * 2) + " Adet"
                 })
 
     # *******************************************************************************************************************************************
@@ -1859,16 +1969,16 @@ class Project(models.Model):
                                 str(gorev.en) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
                     if gorev.tip == '3' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    gorev.boy-5) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy-3) + " cm " + str(
                                                     gorev.en - 5) + " cm  "
                     elif gorev.tip == '7' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en) + " cm  "
                     elif gorev.tip == '10' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en) + " cm "
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
@@ -1921,32 +2031,32 @@ class Project(models.Model):
                                 str(gorev.en - gorev.en2) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
                     if gorev.tip == '3' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy - 3) + " cm " + str(
                                                     gorev.en2) + " cm  "
-                        gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
-                                                    gorev.en - gorev.en2 - 6) + " cm  "
+                        gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy - 3) + " cm " + str(
+                                                    gorev.en - gorev.en2 - 5) + " cm  "
                     elif gorev.tip == '7' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en2) + " cm  "
-                        gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en - gorev.en2) + " cm  "
                         
                     elif gorev.tip == '10' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     gorev.boy) + " cm " + str(
                                                     gorev.en2) + " cm  "
-                        gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                        gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                                                     gorev.boy) + " cm " + str(
-                                                    gorev.en - gorev.en2 - 6) + " cm  "
+                                                    gorev.en - gorev.en2) + " cm  "
                 else:
-                    gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                    gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                         gorev.boy - 3) + " cm " + \
                                 str(gorev.en2) + " cm : "
-                    gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                    gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                         gorev.boy - 3) + " cm " + \
                                 str(gorev.en - gorev.en2 - 5) + " cm : "
                 adet = gorev.adet
@@ -1990,17 +2100,17 @@ class Project(models.Model):
                                 str(gorev.en) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
                     if gorev.tip == '3' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    gorev.boy-5) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy-3) + " cm " + str(
                                                     gorev.en - 5) + " cm  "
                     elif gorev.tip == '7' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en) + " cm  " 
                                                     
                     elif gorev.tip == '10' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en) + " cm  "
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
@@ -2052,20 +2162,27 @@ class Project(models.Model):
                                 str(gorev.en - gorev.en2) + " cm : "
                 elif gorev.tip in ['3', '7', '10']:
                     if gorev.tip == '3' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy - 3) + " cm " + str(
                                                     gorev.en2) + " cm  "
-                        gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
-                                                    gorev.en - gorev.en2 - 6) + " cm  "
+                        gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy - 3) + " cm " + str(
+                                                    gorev.en - gorev.en2 - 5) + " cm  "
                     elif gorev.tip == '7' :
-                        gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en2) + " cm  "
-                        gorev_adi2 = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
-                                                    210) + " cm " + str(
+                        gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
                                                     gorev.en - gorev.en2) + " cm  "
                         
+                    elif gorev.tip == '10' :
+                        gorev_adi = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
+                                                    gorev.en2) + " cm  "
+                        gorev_adi2 = "18 mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
+                                                    gorev.boy) + " cm " + str(
+                                                    gorev.en - gorev.en2) + " cm  "
                 else:
                     gorev_adi = str(self.yuzey_kalinlik) + " mm " + str(self.tip_degeri_bul(gorev.tip)) + " : " + str(
                         gorev.boy - 3) + " cm " + \
@@ -2236,7 +2353,8 @@ class Project(models.Model):
                     'name': gorev_adi,
                 })
 
- 
+    def project_emri(self):
+        print("emir oluşturuldu")
 
 
 class ProjectTask(models.Model):
