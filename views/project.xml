@@ -6,7 +6,7 @@
         <field name="inherit_id" ref="project.edit_project"/>
         <field name="arch" type="xml">
 
-            
+
             <xpath expr="//header" position="inside">
                 <!-- Sarım Emri Button -->
                 <button name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight sarim-emri-btn"/>
@@ -22,7 +22,7 @@
             <xpath expr="//header" position="inside">
                 <!-- Plastik Sipariş Emri Button -->
                 <button name="plastik_siparis_emri" string="Satın Alma Emri Oluştur" type="object" class="oe_highlight plastik-emri-btn"/>
-            </xpath> 
+            </xpath>
             <xpath expr="//field[@name='user_id']" position="replace">
 
                 <field name="sarim_emri_disabled" />
@@ -46,7 +46,7 @@
 
             <xpath expr="//field[@name='label_tasks']" position="before">
 
-                <!--                 <button  name="compute_toplam_kapi" string="toplam kapı hesapla Oluştur" type="object" />-->
+                <!--                 <button name="compute_toplam_kapi" string="toplam kapı hesapla Oluştur" type="object" />-->
                 <group>
 
 
@@ -133,68 +133,24 @@
         </field>
     </record>
 
-
-    <!-- <template id="custom_project_kanban_box" inherit_id="project.view_project_kanban">
-        <xpath expr="//a[hasclass('o_project_kanban_box')]" position="before">
-            <div>
-                <span>Custom Content: </span>
-                <t t-esc="record.my_custom_field.value" />
-            </div>
-        </xpath>
-    </template> -->
-    <!-- <record id="custom_project_kanban_box" model="ir.ui.view">
+    <record id="custom_project_kanban_box" model="ir.ui.view">
         <field name="name">project.project.custom.kanban.box</field>
         <field name="model">project.project</field>
         <field name="inherit_id" ref="project.view_project_kanban"/>
         <field name="arch" type="xml">
-            <xpath expr="//div[@class='o_project_kanban_boxes d-flex align-items-baseline']" position="inside">
+            <xpath expr="//div[hasclass('o_kanban_record_bottom')]" position="before">
                 <a class="o_project_kanban_box" name="action_view_tasks" type="object">
+
                     <div>
-                        <span class="o_value"><t t-esc="record.open_task_count.value"/></span>
-                        <span class="o_label ms-1"><t t-esc="record.label_tasks.value"/></span>
-                    </div>
-                    <div>
-                        <span class="o_value">adasdasdasdsa</span>
+                        <span class="o_value">Toplam Kapi: </span>
+                        <field name="toplam_kapi"/>
                     </div>
                 </a>
-                <a groups='project.group_project_milestone' t-if="record.allow_milestones and record.allow_milestones.raw_value and record.milestone_count.raw_value &gt; 0"
-                    class="o_kanban_inline_block btn-link text-dark small"
-                    role="button"
-                    name="action_get_list_view"
-                    type="object"
-                    t-attf-title="#{record.milestone_count_reached.value} Milestones reached out of #{record.milestone_count.value}"
-                >
-                    <span class="fa fa-flag me-1"/>
-                    <t t-out="record.milestone_count_reached.value"/>/<t t-out="record.milestone_count.value"/>
-                </a>
+
             </xpath>
         </field>
-    </record> -->
-    <!-- <data>
-        <template id="custom_project_kanban_box" inherit_id="project.view_project_kanban">
-            <xpath expr="//div[@class='o_project_kanban_boxes d-flex align-items-baseline']" position="inside">
-                <a class="o_project_kanban_box" name="action_view_tasks" type="object">
-                    <div>
-                        <span class="o_value"><t t-esc="record.open_task_count.value"/></span>
-                        <span class="o_label ms-1"><t t-esc="record.label_tasks.value"/></span>
-                    </div>
-                    <div>
-                        <span class="o_value">adasdasdasdsa</span>
-                    </div>
-                </a>
-                <a groups='project.group_project_milestone' t-if="record.allow_milestones and record.allow_milestones.raw_value and record.milestone_count.raw_value &gt; 0"
-                    class="o_kanban_inline_block btn-link text-dark small"
-                    role="button"
-                    name="action_get_list_view"
-                    type="object"
-                    t-attf-title="#{record.milestone_count_reached.value} Milestones reached out of #{record.milestone_count.value}"
-                >
-                    <span class="fa fa-flag me-1"/>
-                    <t t-out="record.milestone_count_reached.value"/>/<t t-out="record.milestone_count.value"/>
-                </a>
-            </xpath>
-        </template>
-    </data> -->
+    </record>
+
 
 </odoo>
 
