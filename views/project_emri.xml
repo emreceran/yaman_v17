@@ -6,9 +6,9 @@
                 <table class="table table-sm text-center">
                     <thead>
                         <tr>
-                            <td class="align-middle border">
-                                <h3>No</h3>
-                            </td>
+<!--                            <td class="align-middle border">-->
+<!--                                <h3>No</h3>-->
+<!--                            </td>-->
                             <td class="align-middle border">
                                 <h3>Plastik</h3>
                             </td>
@@ -30,16 +30,16 @@
                             <td class="align-middle border">
                                 <h3>Oda</h3>
                             </td>
-                            <td class="align-middle border">
-                                <h3>En2</h3>
-                            </td>
+<!--                            <td class="align-middle border">-->
+<!--                                <h3>En2</h3>-->
+<!--                            </td>-->
                         </tr>
                     </thead>
                     <tbody>
                         <tr t-foreach="lines" t-as="line" t-att-style="'background-color: #F1F1F1;' if line_index % 2 == 0 else ''">
-                            <td class="align-middle border">
-                                <h4 t-field="line.name"/>
-                            </td>
+<!--                            <td class="align-middle border">-->
+<!--                                <h4 t-field="line.name"/>-->
+<!--                            </td>-->
                             <td class="align-middle border">
                                 <h4 t-field="line.plastik"/>
                             </td>
@@ -61,9 +61,9 @@
                             <td class="align-middle border">
                                 <h4 t-field="line.oda"/>
                             </td>
-                            <td class="align-middle border">
-                                <h4 t-field="line.en2"/>
-                            </td>
+<!--                            <td class="align-middle border">-->
+<!--                                <h4 t-field="line.en2"/>-->
+<!--                            </td>-->
                         </tr>
                     </tbody>
                 </table>
@@ -90,10 +90,16 @@
             <t t-foreach="docs" t-as="doc">
                 <t t-call="web.internal_layout">
                     <div class="page">
+                        <div class="col-12 text-center">
+                            <h5>
+                                    <t t-esc="doc.name"/>
+                                </h5>
+                        </div>
                         <div class="oe_structure"/>
                         <div class="container-fluid mb-5">
                             <t t-set="fields" t-value="doc.get_field_groups()"/>
                             <t t-foreach="doc.get_field_groups()" t-as="field">
+
                                 <div class="row">
                                     <t t-if="field[0]"> 
                                         <div class="col-3 border-bottom p-1 bg-light fw-bold">
