@@ -7,22 +7,20 @@
         <field name="arch" type="xml">
 
 
-            <xpath expr="//header" position="inside">
-                <!-- Sarım Emri Button -->
-                <button name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight sarim-emri-btn"/>
-            </xpath>
-            <xpath expr="//header" position="inside">
-                <!-- Çatım Emri Button -->
-                <button name="catim_emri" string="Çatım Emri Oluştur" type="object" class="oe_highlight catim-emri-btn"/>
-            </xpath>
-            <xpath expr="//header" position="inside">
-                <!-- CNC Emri Button -->
-                <button name="cnc_emri" string="CNC Emri Oluştur" type="object" class="oe_highlight cnc-emri-btn"/>
-            </xpath>
-            <xpath expr="//header" position="inside">
-                <!-- Plastik Sipariş Emri Button -->
-                <button name="plastik_siparis_emri" string="Satın Alma Emri Oluştur" type="object" class="oe_highlight plastik-emri-btn"/>
-            </xpath>
+           <xpath expr="//header" position="replace">
+<div>
+<!--  Sarım Emri Button  -->
+<button name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight sarim-emri-btn mx-1"/>
+<!--  Çatım Emri Button  -->
+<button name="catim_emri" string="Çatım Emri Oluştur" type="object" class="oe_highlight catim-emri-btn mx-1"/>
+<!--  CNC Emri Button  -->
+<button name="cnc_emri" string="CNC Emri Oluştur" type="object" class="oe_highlight cnc-emri-btn mx-1"/>
+<!--  Plastik Sipariş Emri Button  -->
+<button name="plastik_siparis_emri" string="Satın Alma Emri Oluştur" type="object" class="oe_highlight plastik-emri-btn mx-1"/>
+<!--  Hırdavat Emri Button  -->
+<button name="hirdavat_emri" string="Hırdavat Emri Oluştur" type="object" class="oe_highlight hirdavat-emri-btn mx-1"/>
+</div>
+</xpath>
             <xpath expr="//field[@name='user_id']" position="replace">
 
                 <field name="sarim_emri_disabled" />
@@ -83,7 +81,17 @@
                 <group class="w-100">
                     <field name="cnc_description"/>
                 </group>
-
+               <group string="HIRDAVAT" class="mt-5">
+<field name="mentese"/>
+<field name="kapi_kilit"/>
+<field name="kapi_kol"/>
+<field name="stoper"/>
+<field name="vida"/>
+<field name="fitil"/>
+<field name="surgu"/>
+<field name="kopuk"/>
+<field name="silikon"/>
+</group>
             </xpath>
 
         </field>
@@ -126,7 +134,17 @@
                     <field name="image1" widget="image"/>
                     <field name="image2" widget="image"/>
                 </group>
-
+<group string="HIRDAVAT" class="mt-5">
+<field name="mentese"/>
+<field name="kapi_kilit"/>
+<field name="kapi_kol"/>
+<field name="stoper"/>
+<field name="vida"/>
+<field name="fitil"/>
+<field name="surgu"/>
+<field name="kopuk"/>
+<field name="silikon"/>
+</group>
 
             </xpath>
 

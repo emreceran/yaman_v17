@@ -3,4 +3,10 @@ access_yaman_renk,yaman.renk,model_yaman_renk,base.group_user,1,1,1,1
 access_yaman_oda,yaman.oda,model_yaman_oda,base.group_user,1,1,1,1
 access_yaman_plastik,yaman.plastik,model_yaman_plastik,base.group_user,1,1,1,1
 access_yaman_plastikkasa,yaman.plastikkasa,model_yaman_plastikkasa,base.group_user,1,1,1,1
+access_yaman_hirdavat_mentese,yaman.hirdavat_mentese,model_yaman_hirdavat_mentese,base.group_user,1,1,1,1
+access_yaman_hirdavat_kapi_kilit,yaman.hirdavat_kapi_kilit,model_yaman_hirdavat_kapi_kilit,base.group_user,1,1,1,1
+access_yaman_hirdavat_kapi_kol,yaman.hirdavat_kapi_kol,model_yaman_hirdavat_kapi_kol,base.group_user,1,1,1,1
+access_yaman_hirdavat_stoper,yaman.hirdavat_stoper,model_yaman_hirdavat_stoper,base.group_user,1,1,1,1
+access_yaman_hirdavat_fitil,yaman.hirdavat_fitil,model_yaman_hirdavat_fitil,base.group_user,1,1,1,1
+access_yaman_hirdavat_surgu,yaman.hirdavat_surgu,model_yaman_hirdavat_surgu,base.group_user,1,1,1,1
 access_emir_wizard,emir.wizard.access,model_emir_wizard,base.group_user,1,1,1,1

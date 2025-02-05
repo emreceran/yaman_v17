@@ -30,12 +30,59 @@ class plastikkasa(models.Model):
     value = fields.Char(string='PLastik kasa değeri ', required=True, translate=True)
 
 
+class hirdavat_mentese(models.Model):
+    _name = "yaman.hirdavat_mentese"
+    _description = 'hirdavat_mentese'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='Model ', required=True, translate=True)
+
+class hirdavat_kapi_kilit(models.Model):
+    _name = "yaman.hirdavat_kapi_kilit"
+    _description = 'hirdavat_kapi_kilit'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='Model ', required=True, translate=True)
+
+class hirdavat_kapi_kol(models.Model):
+    _name = "yaman.hirdavat_kapi_kol"
+    _description = 'hirdavat_kapi_kol'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='Model ', required=True, translate=True)
+
+class hirdavat_stoper(models.Model):
+    _name = "yaman.hirdavat_stoper"
+    _description = 'hirdavat_stoper'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='Model ', required=True, translate=True)
+
+class hirdavat_fitil(models.Model):
+    _name = "yaman.hirdavat_fitil"
+    _description = 'hirdavat_fitil'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='Model ', required=True, translate=True)
+
+class hirdavat_surgu(models.Model):
+    _name = "yaman.hirdavat_surgu"
+    _description = 'hirdavat_surgu'
+
+    active = fields.Boolean('Active', default=True)
+    name = fields.Char(string='Model ', required=True, translate=True)
+
 class Oda(models.Model):
     _name = "yaman.oda"
     _description = 'Oda'
 
     active = fields.Boolean('Active', default=True)
     name = fields.Char(string='Oda', required=True, translate=True)
+    oda_tip = fields.Selection([
+        ('1', 'oda'),
+        ('2', 'wc'),
+        ('3', 'silindirli')
+    ], default='1', index=True, string="Tip", tracking=True)
 
 class EmirWizard(models.TransientModel):
     _name = 'emir.wizard'

@@ -15,8 +15,8 @@ class Project(models.Model):
     _inherit = 'project.project'
     _description = 'yaman.yaman'
 
-    olcu_alan = fields.Many2one('res.users', string='Ölçüyü Alan', index=True)
-    kaydi_giren = fields.Many2one('res.users', string="Kaydı Giren", index=True)
+    olcu_alan = fields.Many2one('res.users', string ='Ölçüyü Alan', index=True)
+    kaydi_giren = fields.Many2one('res.users', string ="Kaydı Giren", index=True)
     kapi_model = fields.Char(string="Kapı Modeli")
     yuzey_tipi = fields.Selection([
         ('1', 'PVC'),
@@ -47,7 +47,27 @@ class Project(models.Model):
     cnc_description = fields.Text(string="CNC Emri Açıklaması", default="-")
     image1 = fields.Image("Resim")
     image2 = fields.Image("Resim")
-
+    mentese=fields.Many2one('yaman.hirdavat_mentese', string="Menteşe", index=True)
+    kapi_kilit=fields.Many2one('yaman.hirdavat_kapi_kilit', string="Kapı kilit", index=True)
+    kapi_kol=fields.Many2one('yaman.hirdavat_kapi_kol', string="Kapı Kol", index=True)
+    stoper=fields.Many2one('yaman.hirdavat_stoper', string="Stoper", index=True)
+    vida=fields.Selection([
+        ('1', 'Yok'),
+        ('2', 'Var')
+    ], default='1', index=True, string="Vida", tracking=True)
+    fitil=fields.Many2one('yaman.hirdavat_fitil', string="Fitil", index=True)
+    surgu=fields.Many2one('yaman.hirdavat_surgu', string="Gömme Sürgü", index=True)
+    kopuk=fields.Selection([
+        ('1', 'Yok'),
+        ('2', 'Var')
+    ], default='1', index=True, string="Köpük", tracking=True)
+    silikon=fields.Selection([
+        ('1', 'Yok'),
+        ('2', 'Var')
+    ], default='1', index=True, string="Silikon", tracking=True)
+ 
+    
+    Tum_toplam_kapi = fields.Char(string="Tüm Toplam Kapı Sayısı", compute="_compute_Tum_toplam_kapi")
     toplam_kapi = fields.Char(string="Toplam Kapı Sayısı", compute="_compute_toplam_kapi")
     plastik_kapi = fields.Char(string="Plastik Kapı Sayısı", compute="_compute_toplam_plastik_kapi")
     kapali_toplam_kapi = fields.Char(string="Kapalı Kapı Sayısı", compute="_compute_kapali_toplam_kapi")
@@ -75,6 +95,21 @@ class Project(models.Model):
     cnc_emri_disabled = fields.Boolean(compute="check_stage_tasks", string="CNC Emri", store=True)
     plastik_emri_disabled = fields.Boolean(compute="check_stage_tasks", string="Satın Alma Emri", store=True)
 
+    # @api.depends("task_ids")
+    # def _compute_Tum_toplam_kapi(self):
+    #     for project in self:
+    #         proe = self.env['project.project'].search([('project_id', '=', project.id)])
+
+    #         tasks= proe.task_ids
+    #         gorevler = [gorev for gorev in tasks if gorev.stage_id.name == "satırlar"]
+    #         toplam_adet = 0
+    #         for i in gorevler:
+    #             toplam_adet += i.adet
+
+    #         for record in self:
+    #             record.Tum_toplam_kapi = str(toplam_adet)
+            
+            
     @api.depends("task_ids")
     def _compute_toplam_kapi(self):
         tasks = self.task_ids
@@ -301,14 +336,6 @@ class Project(models.Model):
         
         return toplam_adet
 
-    def process_image(self, image_data):
-        
-        with Image.open(io.BytesIO(base64.b64decode(image_data))) as img:
-            img = img.resize((800, 600))  # Daha küçük boyutlara indir
-            output = io.BytesIO()
-            img.save(output, format="JPEG", quality=85)
-            return base64.b64encode(output.getvalue()).decode('utf-8')
-
     def get_field_groups(self):
         fields = [
             {"label": "Müşteri", "value": self.partner_id.name if self.partner_id.name else None},
@@ -481,6 +508,18 @@ class Project(models.Model):
                 gorevler.append(gorev)
 
         return gorevler
+    def hirdavat_emirleri_getir(self):
+        tasks = self.task_ids
+        hırdavat_emri_stage_id = self.env['project.task.type'].search(
+            [('project_ids', 'in', self.id), ('name', 'like', "HIRDAVAT EMRİ")], limit=1).id
+
+        gorevler = []
+        for gorev in tasks:
+
+            if gorev.stage_id.id == hırdavat_emri_stage_id:
+                gorevler.append(gorev)
+
+        return gorevler
 
     def _kas_emirleri_getir(self):
 
@@ -593,7 +632,6 @@ class Project(models.Model):
         return liste
 
 
-
     def kasa_emirleri(self, gorevler, sarma_emri_stage_id, plastik):
 
         kucukenli_gorevler = []
@@ -689,7 +727,7 @@ class Project(models.Model):
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': math.ceil(sta[1] * 3),
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
                                              'name': "KASA" + str(sta[0]) + " cm " + str(
-                                                 math.ceil(sta[1] * 3)) + " Adet"})
+                                                 math.ceil(sta[1] * (2.5 if sta[0] < 138 else 3))) + " Adet"})
 
         for sta in surgulu_kucuk_adetler:
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': math.ceil(sta[1] * 2.5),
@@ -703,7 +741,7 @@ class Project(models.Model):
             self.env['project.task'].create({'project_id': self.id, 'allocated_hours': math.ceil(sta[1] * 3),
                                              'stage_id': sarma_emri_stage_id, 'plastik': plastik,
                                              'name': "Lambasız KASA" + str(sta[0]) + " cm " + str(
-                                                 math.ceil(sta[1] * 3)) + " Adet"})
+                                                 math.ceil(sta[1] * (2.5 if sta[0] < 138 else 3))) + " Adet"})
 
     def pervaz_emirleri(self, gorevler, sarma_emri_stage_id):
 
@@ -711,7 +749,7 @@ class Project(models.Model):
         """tüm görevlerdeki adetler toplanır"""
         toplam_adet = 0
         for gorev in gorevler:
-            if gorev.tip not in ['4', '8', '9', '10']:
+            if gorev.tip not in ['8', '9', '10']:
                 toplam_adet += gorev.adet
 
         "pervaz iç, dış ve başlık kalınlık değerli çağılır"
@@ -1410,6 +1448,7 @@ class Project(models.Model):
             sadece_scamli_gorevler = []
 
             for gorev in gorevler:
+                print(str(gorev.tip) +"************************")
                 if gorev.tip == "1":  # ('1', 'Kapalı')
                     kapali_gorevler.append(gorev)
                 elif gorev.tip == "2":  # ('2', 'Çıtalı Camlı')
@@ -2355,7 +2394,101 @@ class Project(models.Model):
 
     def project_emri(self):
         print("emir oluşturuldu")
+        
+    def hirdavat_emri(self):
+        
+        gorevler = self.uretim_emirleri()
 
+        hirdavat_emri_stage_id = self.env['project.task.type'].search(
+            [('project_ids', 'in', self.id), ('name', 'like', "HIRDAVAT EMRİ")], limit=1).id
+
+        
+        hirdavatlar = {
+        'mentese': self.mentese,
+        'kapi_kilit': self.kapi_kilit,
+        'kapi_kol': self.kapi_kol,
+        'stoper': self.stoper,
+        'fitil': self.fitil,
+        'surgu': self.surgu,
+        'vida': self.vida,
+        'kopuk': self.kopuk,
+        'silikon': self.silikon,
+        }
+        hirdavat_adetleri={}
+        for key, value in hirdavatlar.items():
+            if value and value != "1":  # Eğer model var ise
+                match key:
+                    case "mentese":
+                        menteseToplam = sum(gorev.adet * (3 if gorev.en < 100 else 6)for gorev in gorevler if gorev.tip in ["1", "2", "3"])
+                        if menteseToplam > 0:
+                            hirdavat_adetleri["mentese"] = f'MENTEŞE: {value.name} {menteseToplam} Adet'
+
+                    case "kapi_kilit":
+                        odaKilitToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.oda.oda_tip == "1")
+                        wcKilitToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.oda.oda_tip == "2")
+                        silindirKilitToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.oda.oda_tip == "3")
+                        
+                        if odaKilitToplam > 0:
+                            hirdavat_adetleri["oda_kilit"] = f'KAPI KİLİT: ODA {value.name} {odaKilitToplam} Adet'
+                        if wcKilitToplam > 0:
+                            hirdavat_adetleri["wc_kilit"] = f'KAPI KİLİT: WC {value.name} {wcKilitToplam} Adet'
+                        if silindirKilitToplam > 0:
+                            hirdavat_adetleri["silindir_kilit"] = f'KAPI KİLİT: SİLİNDİR {value.name} {silindirKilitToplam} Adet'
+
+                    case "kapi_kol":
+                        odaKolToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.oda.oda_tip == "1")
+                        wcKolToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.oda.oda_tip == "2")
+                        silindirKolToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.oda.oda_tip == "3")
+                        
+                        if odaKolToplam > 0:
+                            hirdavat_adetleri["oda_kol"] = f'KAPI KOL: ODA {value.name} {odaKolToplam} Adet'
+                        if wcKolToplam > 0:
+                            hirdavat_adetleri["wc_kol"] = f'KAPI KOL: WC {value.name} {wcKolToplam} Adet'
+                        if silindirKolToplam > 0:
+                            hirdavat_adetleri["silindir_kol"] = f'KAPI KOL: SİLİNDİR {value.name} {silindirKolToplam} Adet'
+
+                    case "stoper":
+                        stoperToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"])
+                        if stoperToplam > 0:
+                            hirdavat_adetleri["stoper"] = f'STOPER: {value.name} {stoperToplam} Adet'
+
+                    case "fitil":
+                        fitilToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.plastik == "2")
+                        if fitilToplam > 0:
+                            hirdavat_adetleri["fitil"] = f'FİTİL: {value.name} {fitilToplam} Adet'
+
+                    case "surgu":
+                        surguToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"] and gorev.en > 100)
+                        if surguToplam > 0:
+                            hirdavat_adetleri["surgu"] = f'GÖMME SÜRGÜ: {value.name} {surguToplam} Adet'
+
+                    case "vida":
+                        vidaToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"])
+                        if vidaToplam > 0:
+                            hirdavat_adetleri["vida_4x50"] = f'VİDA: 4X50 {vidaToplam * 6} Adet'
+                            hirdavat_adetleri["vida_3.5x25"] = f'VİDA: 3,5X25 {vidaToplam * 16} Adet'
+                            hirdavat_adetleri["vida_3x20"] = f'VİDA: 3X20 {vidaToplam * 16} Adet'
+                            hirdavat_adetleri["vida_3.5x18"] = f'VİDA: 3,5X18 {vidaToplam * 6} Adet'
+
+                    case "kopuk":
+                        kopukToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"])
+                        if kopukToplam > 0:
+                            hirdavat_adetleri["kopuk"] = f'KÖPÜK: {kopukToplam / 2} Adet'
+
+                    case "silikon":
+                        silikonToplam = sum(gorev.adet for gorev in gorevler if gorev.tip in ["1", "2", "3"])
+                        if silikonToplam > 0:
+                            hirdavat_adetleri["silikon"] = f'SİLİKON: {silikonToplam / 2} Adet'
+
+                    case _:
+                        hirdavat_adetleri[key] = "Bilinmeyen hırdavat türü"
+                        
+        for key, value in reversed(hirdavat_adetleri.items()):
+                self.env['project.task'].create({'project_id': self.id,
+                                                'stage_id': hirdavat_emri_stage_id,
+                                                'name':value})    
+                    
+                 
 
 class ProjectTask(models.Model):
     _inherit = 'project.task'

@@ -31,6 +31,7 @@ Long description of module's purpose
         'views/cnc_emri.xml',
         'views/siparis_emri.xml',
         'views/project_emri.xml',
+        'views/hirdavat_emri.xml',
         'views/wizards.xml',
     ],
     # only loaded in demonstration mode
@@ -38,4 +39,3 @@ Long description of module's purpose
         'demo/demo.xml',
     ],
 }
-
