@@ -7,7 +7,7 @@
         <field name="arch" type="xml">
 
 
-           <xpath expr="//header" position="replace">
+           <xpath expr="//header" position="inside">
 <div>
 <!--  Sarım Emri Button  -->
 <button name="sarma_emri" string="Sarım Emri Oluştur" type="object" class="oe_highlight sarim-emri-btn mx-1"/>
