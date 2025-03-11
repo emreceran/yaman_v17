@@ -112,14 +112,17 @@ class Project(models.Model):
             
     @api.depends("task_ids")
     def _compute_toplam_kapi(self):
-        tasks = self.task_ids
-        gorevler = [gorev for gorev in tasks if gorev.stage_id.name == "satırlar"]
-        toplam_adet = 0
-        for i in gorevler:
-            toplam_adet += i.adet
-
         for record in self:
-            record.toplam_kapi = str(toplam_adet)
+            toplam_adet = sum(record.task_ids.filtered(lambda t: t.stage_id.name == "satırlar").mapped('adet'))
+            record.toplam_kapi = toplam_adet
+        # tasks = self.task_ids
+        # gorevler = [gorev for gorev in tasks if gorev.stage_id.name == "satırlar"]
+        # toplam_adet = 0
+        # for i in gorevler:
+        #     toplam_adet += i.adet
+        #
+        # for record in self:
+        #     record.toplam_kapi = str(toplam_adet)
 
     @api.depends("task_ids")
     def _compute_toplam_plastik_kapi(self):
